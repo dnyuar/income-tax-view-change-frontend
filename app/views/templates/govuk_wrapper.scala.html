@@ -81,7 +81,7 @@
 @mainContentHeader = {
 
     @if(contentHeader.isDefined) {
-        <header class="page-header inline-block">@contentHeader.get</header>
+        <header class="float--left">@contentHeader.get</header>
     }
 
     <div class="float--right">@views.html.language_selection(
@@ -89,6 +89,8 @@
         appConfig.routeToSwitchLanguage,
         customClass = None
     )</div>
+
+    <br>
 }
 
 @getHelpForm = @{uiHelpers.reportAProblemLink(appConfig.reportAProblemPartialUrl, appConfig.reportAProblemNonJSUrl)}
