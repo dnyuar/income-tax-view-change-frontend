@@ -2,3 +2,6 @@
 
 GET        /client-utr        controllers.agent.EnterClientsUTRController.show
 POST       /client-utr        controllers.agent.EnterClientsUTRController.submit
+
+GET        /failed-relationship     controllers.agent.RelationshipFailureController.show
+POST       /failed-relationship     controllers.agent.RelationshipFailureController.submit

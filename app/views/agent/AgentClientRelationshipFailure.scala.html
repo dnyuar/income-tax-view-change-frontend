@@ -19,33 +19,27 @@
 @import views.html.helpers.injected.InputHelper
 @import views.html.helpers.injected.ContinueButton
 @import views.html.helpers.injected.BackLink
-@import views.html.helpers.injected.ErrorSummary
 @import uk.gov.hmrc.play.views.html.helpers.FormWithCSRF
 
 @this(
         mainTemplate: MainTemplate,
         inputHelper: InputHelper,
         continueButton: ContinueButton,
-        form: FormWithCSRF,
-        errorSummary: ErrorSummary
+        backLink: BackLink,
+        form: FormWithCSRF
 )
 
-@(clientUTRForm: Form[String], postAction: Call)(implicit request: Request[_], messages: Messages, appConfig: FrontendAppConfig)
+@(postAction: Call, backUrl: String)(implicit request: Request[_], messages: Messages, appConfig: FrontendAppConfig)
 
-@mainTemplate(title = messages("agent.enter_clients_utr.heading"), form = Some(clientUTRForm)) {
+@mainTemplate(title = messages("agent.enter_clients_utr.heading")) {
 
-    @errorSummary(
-        form = clientUTRForm
-    )
+    @backLink(backUrl)
+
+    <h1>@messages("agent.client_relationship_failure.heading")</h1>
+
+    <p>@messages("agent.client_relationship_failure.reason")</p>
 
     @form(action = postAction) {
-
-        @inputHelper(
-            field = clientUTRForm("utr"),
-            label = messages("agent.enter_clients_utr.heading"),
-            isPageHeading = true,
-            formHint = Some(messages("agent.enter_clients_utr.info"))
-        )
 
         @continueButton()
 
