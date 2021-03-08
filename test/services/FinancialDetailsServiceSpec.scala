@@ -59,6 +59,7 @@ class FinancialDetailsServiceSpec extends TestSupport with MockIncomeTaxViewChan
     Some(testRetrievedUserName),
     IncomeSourceDetailsModel(
       testMtditid,
+      None,
       businesses = (1 to numYears).toList.map { count =>
         BusinessDetailsModel(
           incomeSourceId = s"income-id-$count",

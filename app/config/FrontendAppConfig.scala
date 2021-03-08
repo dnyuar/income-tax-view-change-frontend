@@ -113,6 +113,10 @@ class FrontendAppConfig @Inject()(val servicesConfig: ServicesConfig, val config
   lazy val calcPollSchedulerInterval: Int = servicesConfig.getInt("calculation-polling.interval")
   lazy val calcPollSchedulerTimeout: Int = servicesConfig.getInt("calculation-polling.timeout")
 
+  //What you owe
+  lazy val whatYouOweChargesYearsLimit: Int = servicesConfig.getInt("what-you-owe.charges.years-limit")
+
+
   //Translation
   def languageMap: Map[String, Lang] = Map(
     "english" -> Lang("en"),

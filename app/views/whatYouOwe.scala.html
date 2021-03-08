@@ -1,0 +1,185 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import implicits.ImplicitDateFormatter
+@import implicits.ImplicitCurrencyFormatter._
+@import models.financialDetails.FinancialDetailsModel
+@import models.financialDetails.Charge
+@import models.core.breadcrumb.{Breadcrumb, BreadcrumbItem}
+@import views.html.helpers.breadcrumbHelper
+@import views.html.templates.main_template
+@import java.time.LocalDate
+
+@(financialDetails: FinancialDetailsModel = FinancialDetailsModel(List()), yearOfMigration: Option[String], paymentEnabled: Boolean, implicitDateFormatter: ImplicitDateFormatter)(implicit request: Request[_], messages: Messages, appConfig: config.FrontendAppConfig)
+@import implicitDateFormatter.longDate
+
+@paymentTypesDropdown = {
+    <details class="govuk-details" data-module="govuk-details" role="group">
+        <summary class="govuk-details__summary" id="payment-type-dropdown-title" role="button" aria-controls="payment-details-content" aria-expanded="false">
+            <span class="govuk-details__summary-text"> @messages("whatYouOwe.dropdown.info") </span>
+        </summary>
+
+        <div class="govuk-details__text" id="payment-details-content-0" data-module="govuk-details" aria-hidden="false">
+            <h3 id="remaining-balance-heading" class="heading-medium">@messages("whatYouOwe.remaining-balance.heading")</h3>
+            <span id="remaining-balance-line1"> @messages("whatYouOwe.remaining-balance.line1")</span>
+        </div>
+
+        <div class="govuk-details__text" id="payment-details-content-1" data-module="govuk-details" aria-hidden="false">
+            <h3 id="payment-on-account-heading" class="heading-medium">@messages("whatYouOwe.payment-on-account.heading")</h3>
+            <span id="payment-on-account-line1"> @messages("whatYouOwe.payment-on-account.line1")</span>
+        </div>
+    </details>
+}
+
+@tableHead(headId: String) = {
+    <thead class="govuk-table__head" id="@headId">
+        <tr class="govuk-table__row">
+            <th class="govuk-table__header">@messages("whatYouOwe.tableHead.due-date")</th>
+            <th class="govuk-table__header">@messages("whatYouOwe.tableHead.payment-type")</th>
+            <th class="govuk-table__header">@messages("whatYouOwe.tableHead.amount-due")</th>
+        </tr>
+    </thead>
+}
+
+@tableRow(rowId: String, charge: Charge, isOverduePayment: Boolean = false, isChargeTypeHyperlinked: Boolean = true) = {
+    <tr class="govuk-table__row" id="@rowId">
+        <td class="govuk-table__cell">@charge.due.get.toLongDateShort</td>
+        <td class="govuk-table__cell">
+            @if(isChargeTypeHyperlinked){<a id="@rowId-link" href="@controllers.routes.ChargeSummaryController.showChargeSummary(charge.taxYear.toInt, charge.transactionId)">}
+            @if(isOverduePayment){<span id="@rowId-overdue" class="govUk-tag govUk-tag--overdue">@messages("whatYouOwe.over-due")</span>}
+            @messages(s"whatYouOwe.${charge.getChargeTypeKey}")
+            @if(isChargeTypeHyperlinked){</a>}
+            <div>@messages("whatYouOwe.payment-type.taxYear", (charge.taxYear.toInt - 1).toString, charge.taxYear)</div>
+        </td>
+        <td class="govuk-table__cell">@{charge.outstandingAmount.get.toCurrency}</td>
+    </tr>
+}
+
+@main_template(
+    title = messages("whatYouOwe.heading"),
+    contentHeader = Some(breadcrumbHelper(Breadcrumb(Vector(
+        BreadcrumbItem("breadcrumb-it", Some(controllers.routes.HomeController.home.url)),
+        BreadcrumbItem("breadcrumb-what-you-owe", None)
+        )), "WhatYouOwePage")),
+    bodyClasses = None,
+    scriptElem = None
+) {
+
+    <header class="page-heading">
+        <h1 class="heading-xlarge" id="page-heading">@messages("whatYouOwe.heading")</h1>
+    </header>
+
+    @if(!yearOfMigration.isDefined || !financialDetails.getLatestChargeByDueDate(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isDefined) {
+        <p id="no-payments-due">@messages("whatYouOwe.no-payments-due")</p>
+        <p id ="sa-note">@messages("whatYouOwe.sa-note"))</p>
+        <p id ="outstanding-charges-note">@messages("whatYouOwe.outstanding-charges-note")</p>
+    } else {
+
+        <div id="payments-due-note" class="panel panel-indent panel-border-wide">
+            <p id ="sa-note">@Html(Messages("whatYouOwe.sa-note",
+                <a id="sa-note-link" href="" target="_blank">{messages("whatYouOwe.sa-note.link")}</a>))
+            </p>
+            <p id ="outstanding-charges-note">@messages("whatYouOwe.outstanding-charges-note")</p>
+        </div>
+        <div>
+            @if(financialDetails.getBalancingChargeTypeList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).nonEmpty){
+                <h3 id="pre-mtd-payments-heading" class="heading-large">@messages("whatYouOwe.pre-mtd-payments", (LocalDate.now().getYear - 1).toString, LocalDate.now().getYear.toString)</h3>
+                <div id="balancing-charge-type-table">
+                    <table>
+                        @tableHead("balancing-charge-type-table-head")
+                        <tbody class="govuk-table__body">
+                            @for((charge, index) <- financialDetails.getBalancingChargeTypeList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).zipWithIndex) {
+                                @if(charge.due.get.isBefore(LocalDate.now())){
+                                    @tableRow(s"balancing-charge-type-$index", charge, true, false)
+                                } else {
+                                    @tableRow(s"balancing-charge-type-$index", charge, false, false)
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    @paymentTypesDropdown
+                </p>
+            }
+            @if(financialDetails.getOverduePaymentsList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).nonEmpty){
+                <h3 id="over-due-payments-heading" class="heading-large">@messages("whatYouOwe.over-due-payments")</h3>
+                <div id="over-due-payments-table">
+                    <table>
+                        @tableHead("over-due-payments-table-head")
+                        <tbody class="govuk-table__body">
+                            @for((charge, index) <- financialDetails.getOverduePaymentsList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).zipWithIndex) {
+                                @tableRow(s"over-due-type-$index", charge, true, true)
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    @if(financialDetails.getBalancingChargeTypeList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isEmpty) {@paymentTypesDropdown}
+                </p>
+            }
+            @if(financialDetails.getDueWithinThirtyDaysList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).nonEmpty){
+                <h3 id="due-in-thirty-days-payments-heading" class="heading-large">@messages("whatYouOwe.due-in-thirty-days-payments")</h3>
+                <div id="due-in-thirty-days-payments-table">
+                    <table class="govuk-table">
+                        @tableHead("due-in-thirty-days-payments-table-head")
+                        <tbody class="govuk-table__body">
+                            @for((charge, index) <- financialDetails.getDueWithinThirtyDaysList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).zipWithIndex) {
+                                @tableRow(s"due-in-thirty-days-type-$index", charge, false, true)
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    @if(financialDetails.getBalancingChargeTypeList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isEmpty
+                    && financialDetails.getOverduePaymentsList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isEmpty) {
+                            @paymentTypesDropdown
+                    }
+                </p>
+            }
+            @if(financialDetails.getFuturePaymentsList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).nonEmpty){
+                <h3 id="future-payments-heading" class="heading-large">@messages("whatYouOwe.future-payments")</h3>
+                <div id="future-payments-table">
+                    <table>
+                        @tableHead("future-payments-table-head")
+                        <tbody class="govuk-table__body">
+                            @for((charge, index) <- financialDetails.getFuturePaymentsList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).zipWithIndex) {
+                                @tableRow(s"future-payments-type-$index", charge, false, true)
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    @if(financialDetails.getBalancingChargeTypeList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isEmpty
+                    && financialDetails.getOverduePaymentsList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isEmpty
+                    && financialDetails.getDueWithinThirtyDaysList(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isEmpty) {
+                        @paymentTypesDropdown
+                    }
+                </p>
+            }
+        </div>
+        @if(paymentEnabled && financialDetails.getLatestChargeByDueDate(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).isDefined){
+            <div>
+                <p id ="payment-days-note">@messages("whatYouOwe.payment-days-note")</p>
+                <div id="credit-on-account" class="panel panel-indent panel-border-wide">@messages("whatYouOwe.credit-on-account")</div>
+                <div id="payment-button">
+                    <a id="payment-button-link" class="button" href="@controllers.routes.PaymentController.paymentHandoff(financialDetails.getLatestChargeByDueDate(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).get.outstandingAmount.get.toPence)"
+                       aria-label='@messages("whatYouOwe.pay-now-aria", (financialDetails.getLatestChargeByDueDate(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).get.taxYear.toInt - 1).toString, financialDetails.getLatestChargeByDueDate(yearOfMigration.get, appConfig.whatYouOweChargesYearsLimit).get.taxYear)'>@messages("whatYouOwe.payNow")</a>
+                </div>
+            </div>
+        }
+    }
+}

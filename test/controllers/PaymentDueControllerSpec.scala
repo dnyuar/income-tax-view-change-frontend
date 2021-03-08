@@ -121,34 +121,41 @@ class PaymentDueControllerSpec extends MockAuthenticationPredicate
       }
     }
     "NewFinancialDetailsApi FS is enabled" when {
-      "obtaining a users transaction" should {
-        "send the user to the paymentsDue page with transactions" in new Setup {
+      "obtaining a users charge" should {
+        "send the user to the paymentsOwe page with charges with YearOfMigration data existing" in new Setup {
           enable(NewFinancialDetailsApi)
           mockSingleBusinessIncomeSource()
-          when(financialDetailsService.getAllUnpaidFinancialDetails(any(), any(), any()))
-            .thenReturn(Future.successful(noFinancialDetailErrors))
+          when(financialDetailsService.getFinancialDetails(any())(any(), any()))
+            .thenReturn(Future.successful(testFinancialDetail(2017)))
 
           val result = await(controller.viewPaymentsDue(fakeRequestWithActiveSession))
 
           status(result) shouldBe Status.OK
         }
 
-        "send the user to the Internal error page with internal server errors" in new Setup {
+        "send the user to the Internal error page with financialDetails errors and YearOfMigration data existing" in new Setup {
           enable(NewFinancialDetailsApi)
           mockSingleBusinessIncomeSource()
-          when(financialDetailsService.getAllUnpaidFinancialDetails(any(), any(), any()))
-            .thenReturn(Future.successful(hasAFinancialDetailError))
+          when(financialDetailsService.getFinancialDetails(any())(any(), any()))
+            .thenReturn(Future.successful(testFinancialDetailsErrorModel))
 
           val result = await(controller.viewPaymentsDue(fakeRequestWithActiveSession))
 
           status(result) shouldBe Status.INTERNAL_SERVER_ERROR
         }
 
-        "send the user to the Internal error page with internal server errors and transactions" in new Setup {
+        "send the user to the Internal error page with YearOfMigration data not existing" in new Setup {
           enable(NewFinancialDetailsApi)
-          mockBothIncomeSources()
-          when(financialDetailsService.getAllUnpaidFinancialDetails(any(), any(), any()))
-            .thenReturn(Future.successful(hasFinancialDetailErrors))
+          mockPropertyIncomeSource()
+
+          val result = await(controller.viewPaymentsDue(fakeRequestWithActiveSession))
+
+          status(result) shouldBe Status.OK
+        }
+
+        "send the user to the Internal error page when Income sources call fails" in new Setup {
+          enable(NewFinancialDetailsApi)
+          mockErrorIncomeSource()
 
           val result = controller.viewPaymentsDue(fakeRequestWithActiveSession)
 

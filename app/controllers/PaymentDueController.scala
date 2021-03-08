@@ -30,7 +30,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import services.{FinancialDetailsService, FinancialTransactionsService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class PaymentDueController @Inject()(val checkSessionTimeout: SessionTimeoutPredicate,
                                      val authenticate: AuthenticationPredicate,
@@ -59,11 +59,17 @@ class PaymentDueController @Inject()(val checkSessionTimeout: SessionTimeoutPred
   val viewPaymentsDue: Action[AnyContent] = (checkSessionTimeout andThen authenticate andThen retrieveNino andThen retrieveIncomeSources).async {
     implicit user =>
       if(isEnabled(NewFinancialDetailsApi)) {
-        financialDetailsService.getAllUnpaidFinancialDetails map {
-          case charges if hasFinancialDetailsError(charges) => itvcErrorHandler.showInternalServerError()
-          case financialDetails: List[FinancialDetailsModel] => Ok(views.html.paymentDue(financialDetails = financialDetails,
-            paymentEnabled = isEnabled(Payment), implicitDateFormatter = dateFormatter))
+        if(user.incomeSources.yearOfMigration.isDefined) {
+          financialDetailsService.getFinancialDetails(user.incomeSources.yearOfMigration.get.toInt) map {
+            case _: FinancialDetailsErrorModel => itvcErrorHandler.showInternalServerError()
+            case financialDetails: FinancialDetailsModel => Ok(views.html.whatYouOwe(financialDetails = financialDetails,
+              paymentEnabled = isEnabled(Payment), implicitDateFormatter = dateFormatter, yearOfMigration = user.incomeSources.yearOfMigration))
+          }
+        } else {
+          Future.successful(Ok(views.html.whatYouOwe(
+            paymentEnabled = isEnabled(Payment), implicitDateFormatter = dateFormatter, yearOfMigration = None)))
         }
+
       } else {
         financialTransactionsService.getAllUnpaidFinancialTransactions.map {
           case transactions if hasFinancialTransactionsError(transactions) => itvcErrorHandler.showInternalServerError()

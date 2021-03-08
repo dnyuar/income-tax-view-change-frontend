@@ -27,13 +27,15 @@ object IncomeSourceIntegrationTestConstants {
   val singleBusinessResponse: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
     testMtdItId,
     businesses = List(business1),
-    property = None
+    property = None,
+    yearOfMigration = None
   )
 
   val misalignedBusinessWithPropertyResponse: IncomeSourceDetailsResponse = IncomeSourceDetailsModel(
     testMtdItId,
     businesses = List(business2),
-    property = Some(property)
+    property = Some(property),
+    yearOfMigration = None
   )
 
   val multipleBusinessesResponse: IncomeSourceDetailsResponse = IncomeSourceDetailsModel(
@@ -42,17 +44,20 @@ object IncomeSourceIntegrationTestConstants {
       business1,
       business2
     ),
-    property = None
+    property = None,
+    yearOfMigration = Some("2019")
   )
 
   val businessAndPropertyResponse: IncomeSourceDetailsResponse = IncomeSourceDetailsModel(
     testMtdItId,
     businesses = List(business1),
-    property = Some(property)
+    property = Some(property),
+    yearOfMigration = None
   )
 
   val paymentHistoryBusinessAndPropertyResponse: IncomeSourceDetailsResponse = IncomeSourceDetailsModel(
     testMtdItId,
+    None,
     businesses = List(oldBusiness1),
     property = Some(oldProperty)
   )
@@ -63,17 +68,19 @@ object IncomeSourceIntegrationTestConstants {
       business1,
       business2
     ),
-    property = Some(property)
+    property = Some(property),
+    yearOfMigration = None
   )
 
   val propertyOnlyResponse: IncomeSourceDetailsResponse = IncomeSourceDetailsModel(
     testMtdItId,
     businesses = List(),
-    property = Some(property)
+    property = Some(property),
+    yearOfMigration = Some("2018")
   )
 
   val noPropertyOrBusinessResponse: IncomeSourceDetailsResponse = IncomeSourceDetailsModel(
-    testMtdItId,
+    testMtdItId,None,
     List(), None
   )
 
@@ -122,7 +129,7 @@ object IncomeSourceIntegrationTestConstants {
   )
 
   def chargeJson(originalAmount: Option[BigDecimal], outstandingAmount: Option[BigDecimal],
-                 totalAmount: Option[BigDecimal], taxYear: String = "2018"): JsValue = Json.obj(
+                 totalAmount: Option[BigDecimal], taxYear: String = "2018", chargeType: String = "Balancing Charge debit"): JsValue = Json.obj(
     "taxYear" -> taxYear,
     "transactionId" -> "1040000123",
     "transactionDate" -> "2019-05-15",
@@ -130,6 +137,7 @@ object IncomeSourceIntegrationTestConstants {
     "totalAmount" -> totalAmount,
     "originalAmount" -> originalAmount,
     "outstandingAmount" -> outstandingAmount,
+    "chargeType" -> chargeType,
     "items" -> Json.arr(
       Json.obj(
         "subItemId" -> "001",
