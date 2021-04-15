@@ -16,11 +16,16 @@
 
 package controllers
 
+import java.time.LocalDate
+
+import audit.AuditingService
+import audit.models.HomeAudit
 import auth.MtdItUser
 import config.featureswitch._
 import config.{FrontendAppConfig, ItvcErrorHandler, ItvcHeaderCarrierForPartialsConverter}
 import controllers.predicates.{AuthenticationPredicate, IncomeSourceDetailsPredicate, NinoPredicate, SessionTimeoutPredicate}
 import implicits.ImplicitDateFormatterImpl
+import javax.inject.{Inject, Singleton}
 import models.financialDetails.FinancialDetailsModel
 import models.financialTransactions.FinancialTransactionsModel
 import play.api.Logger
@@ -31,8 +36,6 @@ import services.{FinancialDetailsService, FinancialTransactionsService, ReportDe
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import utils.CurrentDateProvider
 
-import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -49,7 +52,8 @@ class HomeController @Inject()(val checkSessionTimeout: SessionTimeoutPredicate,
                                mcc: MessagesControllerComponents,
                                implicit val ec: ExecutionContext,
                                val currentDateProvider: CurrentDateProvider,
-                               dateFormatter: ImplicitDateFormatterImpl) extends FrontendController(mcc) with I18nSupport with FeatureSwitching {
+                               dateFormatter: ImplicitDateFormatterImpl,
+                               auditingService: AuditingService) extends FrontendController(mcc) with I18nSupport with FeatureSwitching {
 
   private def view(nextPaymentDueDate: Option[LocalDate], nextUpdate: LocalDate, overDuePayments: Option[Int], overDueUpdates: Option[Int])
                   (implicit request: Request[_], user: MtdItUser[_]): Html = {
@@ -95,6 +99,15 @@ class HomeController @Inject()(val checkSessionTimeout: SessionTimeoutPredicate,
         allCharges.map(_.sortBy(_.toEpochDay())).map { paymentsDue =>
           val overDuePayments = paymentsDue.count(_.isBefore(currentDateProvider.getCurrentDate()))
           val overDueUpdates = latestDeadlineDate._2.size
+
+          auditingService.extendedAudit(HomeAudit(
+            mtdItUser = user,
+            paymentsDue.headOption,
+            latestDeadlineDate._1,
+            overDuePayments,
+            overDueUpdates
+          ))
+
           Ok(view(paymentsDue.headOption, latestDeadlineDate._1, Some(overDuePayments), Some(overDueUpdates)))
         }
 

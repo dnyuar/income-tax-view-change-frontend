@@ -16,8 +16,11 @@
 
 package controllers
 
-import java.time.{LocalDate, ZonedDateTime}
-import assets.MessagesLookUp
+import assets.BaseTestConstants._
+import assets.IncomeSourceDetailsTestConstants._
+import assets.{BaseTestConstants, MessagesLookUp}
+import audit.models.HomeAudit
+import auth.MtdItUser
 import config.featureswitch.{FeatureSwitching, NewFinancialDetailsApi, Payment}
 import config.{FrontendAppConfig, ItvcErrorHandler, ItvcHeaderCarrierForPartialsConverter}
 import controllers.predicates.{NinoPredicate, SessionTimeoutPredicate}
@@ -35,6 +38,7 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import services.{FinancialDetailsService, FinancialTransactionsService, ReportDeadlinesService}
 import utils.CurrentDateProvider
 
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.Future
 
 class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSourceDetailsPredicate with FeatureSwitching {
@@ -58,7 +62,8 @@ class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSour
       app.injector.instanceOf[MessagesControllerComponents],
       ec,
       currentDateProvider,
-      app.injector.instanceOf[ImplicitDateFormatterImpl]
+      app.injector.instanceOf[ImplicitDateFormatterImpl],
+      mockAuditingService,
     )
     when(currentDateProvider.getCurrentDate()) thenReturn LocalDate.of(2018, 1, 20)
   }
@@ -83,7 +88,7 @@ class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSour
           when(financialTransactionsService.getFinancialTransactions(any(), any())(any()))
             .thenReturn(Future.successful(FinancialTransactionsModel(None, None, None, ZonedDateTime.now(), Some(Seq(TransactionModel(taxPeriodTo = Some(LocalDate.of(2019, 4, 5)), outstandingAmount = Some(1000), items = Some(Seq(SubItemModel(dueDate = Some(nextPaymentDate))))))))))
 
-          val result: Future[Result] = controller.home(fakeRequestWithActiveSession)
+          val result: Future[Result] = await(controller.home(fakeRequestWithActiveSession))
 
           status(result) shouldBe Status.OK
           val document: Document = Jsoup.parse(bodyOf(result))
@@ -212,11 +217,9 @@ class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSour
           mockSingleBusinessIncomeSource()
 
           when(financialDetailsService.getFinancialDetails(any(), any())(any()))
-            .thenReturn(Future.successful(FinancialDetailsModel(
-              documentDetails = List(DocumentDetail(nextPaymentYear2, "testId", None, Some(1000.00), None)),
+            .thenReturn(Future.successful(FinancialDetailsModel(documentDetails = List(DocumentDetail(nextPaymentYear2, "testId", None, Some(1000.00), None)),
               financialDetails = List(FinancialDetail(taxYear = nextPaymentYear2, items = Some(Seq(SubItem(dueDate = Some(nextPaymentDate2.toString))))))
             )))
-
           when(financialDetailsService.getFinancialDetails(matches(2018), any())(any()))
             .thenReturn(Future.successful(FinancialDetailsModel(
               documentDetails = List(DocumentDetail(nextPaymentYear2, "testId", Some("ITSA- POA 1"), Some(1000.00), None)),

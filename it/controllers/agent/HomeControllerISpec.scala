@@ -17,11 +17,13 @@ package controllers.agent
 
 import assets.BaseIntegrationTestConstants._
 import assets.messages.HomeMessages.agentTitle
+import audit.models.HomeAudit
+import auth.MtdItUser
 import config.featureswitch._
 import controllers.Assets.INTERNAL_SERVER_ERROR
 import controllers.agent.utils.SessionKeys
 import helpers.agent.ComponentSpecBase
-import helpers.servicemocks.IncomeTaxViewChangeStub
+import helpers.servicemocks.{AuditStub, IncomeTaxViewChangeStub}
 import implicits.{ImplicitDateFormatter, ImplicitDateFormatterImpl}
 import models.core.AccountingPeriodModel
 import models.financialDetails.{DocumentDetail, FinancialDetail, FinancialDetailsModel, SubItem}
@@ -32,6 +34,9 @@ import play.api.i18n.{Messages, MessagesApi}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.FakeRequest
+import uk.gov.hmrc.auth.core.retrieve.Name
+
+import java.time.LocalDate
 
 import java.time.LocalDate
 
@@ -146,19 +151,21 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
               stubAuthorisedAgentUser(authorised = true)
 
+              val incomeSourceDetailsModel: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+                mtdbsa = testMtditid,
+                yearOfMigration = None,
+                businesses = List(BusinessDetailsModel(
+                  "testId",
+                  AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
+                  None, None, None, None, None, None, None, None,
+                  Some(getCurrentTaxYearEnd)
+                )),
+                property = None
+              )
+
               IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(
                 status = OK,
-                response = IncomeSourceDetailsModel(
-                  mtdbsa = testMtditid,
-                  yearOfMigration = None,
-                  businesses = List(BusinessDetailsModel(
-                    "testId",
-                    AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
-                    None, None, None, None, None, None, None, None,
-                    Some(getCurrentTaxYearEnd)
-                  )),
-                  property = None
-                )
+                response = incomeSourceDetailsModel
               )
 
               IncomeTaxViewChangeStub.stubGetReportDeadlines(
@@ -207,6 +214,16 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                 elementTextBySelector("#payments-tile > div > p:nth-child(2)")(LocalDate.now.toLongDate),
                 elementTextBySelector(".form-hint")("UTR: 1234567890 Client’s name Test User")
               )
+
+              AuditStub.verifyAuditContains(HomeAudit(
+                MtdItUser(
+                  testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                )(FakeRequest()),
+                Some(Left(LocalDate.now -> false)),
+                Left(LocalDate.now -> false),
+                Some("1")
+              ).detail)
             }
           }
           "display the page with no upcoming payment" when {
@@ -216,19 +233,23 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
               stubAuthorisedAgentUser(authorised = true)
 
+              AuditStub.stubAuditing()
+
+              val incomeSourceDetailsModel: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+                mtdbsa = testMtditid,
+                yearOfMigration = None,
+                businesses = List(BusinessDetailsModel(
+                  "testId",
+                  AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
+                  None, None, None, None, None, None, None, None,
+                  Some(getCurrentTaxYearEnd)
+                )),
+                property = None
+              )
+
               IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(
                 status = OK,
-                response = IncomeSourceDetailsModel(
-                  mtdbsa = testMtditid,
-                  yearOfMigration = None,
-                  businesses = List(BusinessDetailsModel(
-                    "testId",
-                    AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
-                    None, None, None, None, None, None, None, None,
-                    Some(getCurrentTaxYearEnd)
-                  )),
-                  property = None
-                )
+                response = incomeSourceDetailsModel
               )
 
               IncomeTaxViewChangeStub.stubGetReportDeadlines(
@@ -277,6 +298,16 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                 elementTextBySelector("#payments-tile > div > p:nth-child(2)")("No payments due"),
                 elementTextBySelector(".form-hint")("UTR: 1234567890 Client’s name Test User")
               )
+
+              AuditStub.verifyAuditContains(HomeAudit(
+                MtdItUser(
+                  testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                )(FakeRequest()),
+                None,
+                Left(LocalDate.now -> false),
+                Some("1")
+              ).detail)
             }
           }
           "display the page with an overdue payment and an overdue obligation" when {
@@ -286,19 +317,23 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
               stubAuthorisedAgentUser(authorised = true)
 
+              AuditStub.stubAuditing()
+
+              val incomeSourceDetailsModel: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+                mtdbsa = testMtditid,
+                yearOfMigration = None,
+                businesses = List(BusinessDetailsModel(
+                  "testId",
+                  AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
+                  None, None, None, None, None, None, None, None,
+                  Some(getCurrentTaxYearEnd)
+                )),
+                property = None
+              )
+
               IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(
                 status = OK,
-                response = IncomeSourceDetailsModel(
-                  mtdbsa = testMtditid,
-                  yearOfMigration = None,
-                  businesses = List(BusinessDetailsModel(
-                    "testId",
-                    AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
-                    None, None, None, None, None, None, None, None,
-                    Some(getCurrentTaxYearEnd)
-                  )),
-                  property = None
-                )
+                response = incomeSourceDetailsModel
               )
 
               IncomeTaxViewChangeStub.stubGetReportDeadlines(
@@ -347,6 +382,16 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                 elementTextBySelector("#payments-tile > div > p:nth-child(2)")(s"OVERDUE ${LocalDate.now.minusDays(1).toLongDate}"),
                 elementTextBySelector(".form-hint")("UTR: 1234567890 Client’s name Test User")
               )
+
+              AuditStub.verifyAuditContains(HomeAudit(
+                MtdItUser(
+                  testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                )(FakeRequest()),
+                Some(Left(LocalDate.now.minusDays(1) -> true)),
+                Left(LocalDate.now.minusDays(1) -> true),
+                Some("1")
+              ).detail)
             }
           }
           "display the page with a count of the overdue payments a count of overdue obligations" when {
@@ -356,19 +401,23 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
               stubAuthorisedAgentUser(authorised = true)
 
+              AuditStub.stubAuditing()
+
+              val incomeSourceDetailsModel: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
+                mtdbsa = testMtditid,
+                yearOfMigration = None,
+                businesses = List(BusinessDetailsModel(
+                  "testId",
+                  AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
+                  None, None, None, None, None, None, None, None,
+                  Some(getCurrentTaxYearEnd)
+                )),
+                property = None
+              )
+
               IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(
                 status = OK,
-                response = IncomeSourceDetailsModel(
-                  mtdbsa = testMtditid,
-                  yearOfMigration = None,
-                  businesses = List(BusinessDetailsModel(
-                    "testId",
-                    AccountingPeriodModel(LocalDate.now, LocalDate.now.plusYears(1)),
-                    None, None, None, None, None, None, None, None,
-                    Some(getCurrentTaxYearEnd)
-                  )),
-                  property = None
-                )
+                response = incomeSourceDetailsModel
               )
 
               IncomeTaxViewChangeStub.stubGetReportDeadlines(
@@ -430,6 +479,16 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                 elementTextBySelector("#payments-tile > div > p:nth-child(2)")("2 OVERDUE PAYMENTS"),
                 elementTextBySelector(".form-hint")("UTR: 1234567890 Client’s name Test User")
               )
+
+              AuditStub.verifyAuditContains(HomeAudit(
+                MtdItUser(
+                  testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                )(FakeRequest()),
+                Some(Right(2)),
+                Right(2),
+                Some("1")
+              ).detail)
             }
           }
         }
