@@ -16,6 +16,8 @@
 
 package controllers
 
+import audit.AuditingService
+import audit.models.ChargeSummaryAudit
 import config.featureswitch.{FeatureSwitching, NewFinancialDetailsApi, Payment}
 import config.{FrontendAppConfig, ItvcErrorHandler}
 import controllers.predicates.{AuthenticationPredicate, IncomeSourceDetailsPredicate, NinoPredicate, SessionTimeoutPredicate}
@@ -38,12 +40,12 @@ class ChargeSummaryController @Inject()(authenticate: AuthenticationPredicate,
                                         retrieveNino: NinoPredicate,
                                         retrieveIncomeSources: IncomeSourceDetailsPredicate,
                                         financialDetailsService: FinancialDetailsService,
-                                        itvcErrorHandler: ItvcErrorHandler)
-                                       (implicit val appConfig: FrontendAppConfig,
-                                        val languageUtils: LanguageUtils,
-                                        mcc: MessagesControllerComponents,
-                                        val executionContext: ExecutionContext,
-                                        dateFormatter: ImplicitDateFormatterImpl)
+                                        auditingService: AuditingService,
+                                        itvcErrorHandler: ItvcErrorHandler)(implicit val appConfig: FrontendAppConfig,
+                                                                            val languageUtils: LanguageUtils,
+                                                                            mcc: MessagesControllerComponents,
+                                                                            val executionContext: ExecutionContext,
+                                                                            dateFormatter: ImplicitDateFormatterImpl)
   extends BaseController with ImplicitDateFormatter with FeatureSwitching with I18nSupport {
 
   private def view(documentDetail: DocumentDetail, dueDate: Option[LocalDate], backLocation: Option[String], taxYear: Int)(implicit request: Request[_]) = {
@@ -58,6 +60,11 @@ class ChargeSummaryController @Inject()(authenticate: AuthenticationPredicate,
             case success: FinancialDetailsModel if success.documentDetails.exists(_.transactionId == id) =>
               val backLocation = user.session.get(SessionKeys.chargeSummaryBackPage)
               val documentDetail = success.documentDetails.find(_.transactionId == id).get
+              auditingService.extendedAudit(ChargeSummaryAudit(
+                mtdItUser = user,
+                charge = documentDetail,
+                None
+              ))
               Ok(view(
                 documentDetail = documentDetail,
                 dueDate = success.getDueDateFor(documentDetail),
