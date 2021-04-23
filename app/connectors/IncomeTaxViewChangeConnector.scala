@@ -16,13 +16,10 @@
 
 package connectors
 
-import java.time.LocalDate
-
 import audit.AuditingService
 import audit.models._
-import auth.MtdItUser
+import auth.{MtdItUser, MtdItUserWithNino}
 import config.FrontendAppConfig
-import javax.inject.Inject
 import models.core.{Nino, NinoResponse, NinoResponseError}
 import models.financialDetails._
 import models.incomeSourceDetails.{IncomeSourceDetailsError, IncomeSourceDetailsModel, IncomeSourceDetailsResponse}
@@ -35,6 +32,8 @@ import play.api.http.Status.OK
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
+import java.time.LocalDate
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class IncomeTaxViewChangeConnectorImpl @Inject()(val http: HttpClient,
@@ -122,14 +121,13 @@ trait IncomeTaxViewChangeConnector extends RawResponseReads {
     }
   }
 
-  def getIncomeSources(mtditid: String, nino: String,
-                       saUtr: Option[String], credId: Option[String],
-                       userType: Option[String])(implicit headerCarrier: HeaderCarrier): Future[IncomeSourceDetailsResponse] = {
+  def getIncomeSources()(
+    implicit headerCarrier: HeaderCarrier, mtdItUser: MtdItUserWithNino[_]): Future[IncomeSourceDetailsResponse] = {
 
-    val url = getIncomeSourcesUrl(mtditid)
+    val url = getIncomeSourcesUrl(mtdItUser.mtditid)
     Logger.debug(s"[IncomeTaxViewChangeConnector][getIncomeSources] - GET $url")
 
-    auditingService.extendedAudit(IncomeSourceDetailsRequestAuditModel(mtditid, nino, saUtr, credId, userType))
+    auditingService.extendedAudit(IncomeSourceDetailsRequestAuditModel(mtdItUser))
 
     http.GET[HttpResponse](url) map { response =>
       response.status match {
@@ -142,13 +140,10 @@ trait IncomeTaxViewChangeConnector extends RawResponseReads {
             },
             valid => {
               auditingService.extendedAudit(IncomeSourceDetailsResponseAuditModel(
-                mtditid,
-                nino,
+                mtdItUser,
                 valid.businesses.map(_.incomeSourceId),
                 valid.property.map(_.incomeSourceId),
-                saUtr,
-                credId,
-                userType
+                valid.yearOfMigration
               ))
               valid
             }

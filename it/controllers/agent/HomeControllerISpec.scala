@@ -74,6 +74,8 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
   val implicitDateFormatter: ImplicitDateFormatter = app.injector.instanceOf[ImplicitDateFormatterImpl]
   implicit val messages: Messages = app.injector.instanceOf[MessagesApi].preferred(FakeRequest())
 
+  val testArn: String = "1"
+
   import implicitDateFormatter.longDate
 
   s"GET ${routes.HomeController.show().url}" should {
@@ -218,11 +220,11 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               AuditStub.verifyAuditContains(HomeAudit(
                 MtdItUser(
                   testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
-                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent"), Some(testArn)
                 )(FakeRequest()),
                 Some(Left(LocalDate.now -> false)),
                 Left(LocalDate.now -> false),
-                Some("1")
+                Some(testArn)
               ).detail)
             }
           }
@@ -302,7 +304,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               AuditStub.verifyAuditContains(HomeAudit(
                 MtdItUser(
                   testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
-                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent"), Some(testArn)
                 )(FakeRequest()),
                 None,
                 Left(LocalDate.now -> false),
@@ -386,7 +388,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               AuditStub.verifyAuditContains(HomeAudit(
                 MtdItUser(
                   testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
-                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent"), Some(testArn)
                 )(FakeRequest()),
                 Some(Left(LocalDate.now.minusDays(1) -> true)),
                 Left(LocalDate.now.minusDays(1) -> true),
@@ -483,11 +485,11 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               AuditStub.verifyAuditContains(HomeAudit(
                 MtdItUser(
                   testMtditid, testNino, Some(Name(Some("Test"), Some("User"))),
-                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent")
+                  incomeSourceDetailsModel, Some("1234567890"), None, Some("Agent"), Some(testArn)
                 )(FakeRequest()),
                 Some(Right(2)),
                 Right(2),
-                Some("1")
+                Some(testArn)
               ).detail)
             }
           }

@@ -41,7 +41,7 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
 
 
   val testMtdItUser: MtdItUser[_] = MtdItUser(testMtditid, testNino, Some(testRetrievedUserName), businessAndPropertyAligned,
-    Some("testUtr"), Some("testCredId"), Some("individual"))(FakeRequest())
+    Some("testUtr"), Some("testCredId"), Some("Individual"), None)(FakeRequest())
 
   class Setup(charges: WhatYouOweChargesList,
               currentTaxYear: Int = LocalDate.now().getYear,
@@ -152,6 +152,10 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
 
   "The What you owe view with financial details model" when {
     "the user has charges and access viewer before 30 days of due date" should {
+      s"have the title '${whatYouOwe.title}' and page header and notes" in new Setup(whatYouOweDataWithDataDueInMoreThan30Days) {
+        pageDocument.title() shouldBe whatYouOwe.title
+        pageDocument.getElementById("sa-note-migrated").text shouldBe whatYouOwe.saNote
+      }
       "have the link to their previous Self Assessment online account in the sa-note" in new Setup(whatYouOweDataWithDataDueInMoreThan30Days) {
         verifySelfAssessmentLink()
       }
@@ -219,6 +223,10 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
     }
 
     "the user has charges and access viewer within 30 days of due date" should {
+      s"have the title '${whatYouOwe.title}' and notes" in new Setup(whatYouOweDataWithDataDueIn30Days) {
+        pageDocument.title() shouldBe whatYouOwe.title
+        pageDocument.getElementById("sa-note-migrated").text shouldBe whatYouOwe.saNote
+      }
       s"have the remaining balance header and table data" in new Setup(whatYouOweDataWithDataDueIn30Days) {
         pageDocument.getElementById("pre-mtd-payments-heading").text shouldBe whatYouOwe.preMtdPayments(
           (LocalDate.now().getYear - 2).toString, (LocalDate.now().getYear - 1).toString)
@@ -284,6 +292,10 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
     }
 
     "the user has charges and access viewer after due date" should {
+      s"have the title '${whatYouOwe.title}' and notes" in new Setup(whatYouOweDataWithOverdueData) {
+        pageDocument.title() shouldBe whatYouOwe.title
+        pageDocument.getElementById("sa-note-migrated").text shouldBe whatYouOwe.saNote
+      }
       s"have the mtd payments header, table header and data with remaining balance data with no hyperlink but have overdue tag" in new Setup(
         whatYouOweDataWithOverdueData) {
         pageDocument.getElementById("pre-mtd-payments-heading").text shouldBe whatYouOwe.preMtdPayments(
@@ -422,6 +434,10 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
     }
 
     "the user has charges and access viewer with mixed dates and ACI value of zero" should {
+      s"have the title '${whatYouOwe.title}' and notes" in new Setup(whatYouOweDataWithWithAciValueZeroAndOverdue) {
+        pageDocument.title() shouldBe whatYouOwe.title
+        pageDocument.getElementById("sa-note-migrated").text shouldBe whatYouOwe.saNote
+      }
       s"have the mtd payments header, table header and data with remaining balance data with no hyperlink but have overdue tag" in new Setup(
         whatYouOweDataWithWithAciValueZeroAndOverdue) {
         pageDocument.getElementById("pre-mtd-payments-heading").text shouldBe whatYouOwe.preMtdPayments(
