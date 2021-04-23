@@ -161,8 +161,8 @@ class CalculationController @Inject()(authenticate: AuthenticationPredicate,
             withObligationsModel(taxYear) map {
               case obligationsModel: ObligationsModel =>
                 auditingService.extendedAudit(TaxYearOverviewResponseAuditModel(user, None, calculation, charges, obligationsModel))
-                Ok(view(taxYear, calculationOverview = Some(CalcOverview(calculation, None)),
-                charge = charges, obligations = obligationsModel)).addingToSession(SessionKeys.chargeSummaryBackPage -> "taxYearOverview")
+                Ok(view(taxYear, calculationOverview = Some(CalcOverview(calculation, None)),charge = charges, obligations = obligationsModel))
+                  .addingToSession(SessionKeys.chargeSummaryBackPage -> "taxYearOverview")
               case _ => itvcErrorHandler.showInternalServerError()
             }
           }
