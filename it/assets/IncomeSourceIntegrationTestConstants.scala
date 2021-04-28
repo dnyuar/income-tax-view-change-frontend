@@ -55,7 +55,7 @@ object IncomeSourceIntegrationTestConstants {
     yearOfMigration = None
   )
 
-  val paymentHistoryBusinessAndPropertyResponse: IncomeSourceDetailsResponse = IncomeSourceDetailsModel(
+  val paymentHistoryBusinessAndPropertyResponse: IncomeSourceDetailsModel = IncomeSourceDetailsModel(
     testMtdItId,
     None,
     businesses = List(oldBusiness1),
