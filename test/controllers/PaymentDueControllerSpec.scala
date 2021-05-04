@@ -19,7 +19,7 @@ package controllers
 import assets.BaseTestConstants
 import assets.FinancialDetailsTestConstants._
 import assets.FinancialTransactionsTestConstants._
-import audit.AuditingService
+import audit.mocks.MockAuditingService
 import config.featureswitch.{FeatureSwitching, NewFinancialDetailsApi}
 import config.{FrontendAppConfig, ItvcErrorHandler, ItvcHeaderCarrierForPartialsConverter}
 import controllers.predicates.{NinoPredicate, SessionTimeoutPredicate}
@@ -39,7 +39,7 @@ import services.{FinancialTransactionsService, PaymentDueService}
 import scala.concurrent.Future
 
 class PaymentDueControllerSpec extends MockAuthenticationPredicate
-  with MockIncomeSourceDetailsPredicate with MockIncomeTaxViewChangeConnector with ImplicitDateFormatter with FeatureSwitching {
+  with MockIncomeSourceDetailsPredicate with MockIncomeTaxViewChangeConnector with ImplicitDateFormatter with FeatureSwitching with MockAuditingService {
 
 
   trait Setup {
@@ -56,7 +56,7 @@ class PaymentDueControllerSpec extends MockAuthenticationPredicate
       paymentDueService,
       app.injector.instanceOf[ItvcHeaderCarrierForPartialsConverter],
       app.injector.instanceOf[ItvcErrorHandler],
-      app.injector.instanceOf[AuditingService],
+      mockAuditingService,
       app.injector.instanceOf[FrontendAppConfig],
       app.injector.instanceOf[MessagesControllerComponents],
       ec,
@@ -73,11 +73,12 @@ class PaymentDueControllerSpec extends MockAuthenticationPredicate
     List(documentDetailWithDueDateModel(2020)),
     List(documentDetailWithDueDateModel(2021)),
     Some(OutstandingChargesModel(List(
-      OutstandingChargeModel("BCD", Some("2020-12-31"), 10.23, 1234), OutstandingChargeModel("ACI", None, 1.23, 1234))
+      OutstandingChargeModel("BCD", Some("2020-12-31"), 10.23, 1234),
+      OutstandingChargeModel("ACI", None, 1.23, 1234))
     ))
   )
 
-  def whatYouOweChargesListEmpty: WhatYouOweChargesList = WhatYouOweChargesList()
+  def whatYouOweChargesListEmpty: WhatYouOweChargesList = WhatYouOweChargesList(List.empty)
 
   val noFinancialTransactionErrors = List(testFinancialTransaction(2018))
   val hasFinancialTransactionErrors = List(testFinancialTransaction(2018), financialTransactionsErrorModel)
@@ -146,7 +147,6 @@ class PaymentDueControllerSpec extends MockAuthenticationPredicate
           enable(NewFinancialDetailsApi)
           mockSingleBISWithCurrentYearAsMigrationYear()
           setupMockAuthRetrievalSuccess(BaseTestConstants.testAuthSuccessWithSaUtrResponse())
-
 
           when(paymentDueService.getWhatYouOweChargesList()(any(), any()))
             .thenReturn(Future.successful(whatYouOweChargesListFull))

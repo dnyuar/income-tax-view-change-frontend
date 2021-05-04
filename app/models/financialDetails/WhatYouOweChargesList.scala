@@ -16,9 +16,9 @@
 
 package models.financialDetails
 
-import models.outstandingCharges.OutstandingChargesModel
-
 import java.time.LocalDate
+
+import models.outstandingCharges.OutstandingChargesModel
 
 case class WhatYouOweChargesList(overduePaymentList: List[DocumentDetailWithDueDate] = List(), dueInThirtyDaysList: List[DocumentDetailWithDueDate] = List(),
                                  futurePayments: List[DocumentDetailWithDueDate] = List(), outstandingChargesModel: Option[OutstandingChargesModel] = None) {
