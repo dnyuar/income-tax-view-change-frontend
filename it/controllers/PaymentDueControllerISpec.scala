@@ -18,7 +18,6 @@ package controllers
 
 import java.time.LocalDate
 import assets.BaseIntegrationTestConstants.{testMtditid, testNino, testSaUtr}
-import assets.ChargeListIntegrationTestConstants._
 import assets.FinancialTransactionsIntegrationTestConstants._
 import assets.IncomeSourceIntegrationTestConstants._
 import assets.OutstandingChargesIntegrationTestConstants._
@@ -29,6 +28,7 @@ import config.featureswitch.{NewFinancialDetailsApi, Payment}
 import helpers.ComponentSpecBase
 import helpers.servicemocks.{AuditStub, FinancialTransactionsStub, IncomeTaxViewChangeStub}
 import play.api.http.Status._
+import assets.FinancialDetailIntegrationTestConstants._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 
@@ -224,7 +224,6 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
         }
 
         "redirect to an internal server error page when transactions contain internal server error" in {
-          disable(NewFinancialDetailsApi)
           val testTaxYear1 = 2018
           val testTaxYear2 = 2019
           Given("I wiremock stub a successful Income Source Details response with multiple business and property")
@@ -279,7 +278,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
 
             AuditStub.verifyAuditContainsDetail(WhatYouOweRequestAuditModel(testUser).detail)
 
-            AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweMultiFinancialDetailsBCDACI).detail)
+            AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweDataWithDataDueIn30Days).detail)
 
             verifyIncomeSourceDetailsCall(testMtditid)
             IncomeTaxViewChangeStub.verifyGetFinancialDetails(testNino, s"${testTaxYear.toInt - 1}-04-06", s"${testTaxYear.toInt}-04-05")
@@ -333,7 +332,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
 
             AuditStub.verifyAuditContainsDetail(WhatYouOweRequestAuditModel(testUser).detail)
 
-            AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweMultiFinancialDetails).detail)
+            AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweDataFullDataWithoutOutstandingCharges).detail)
 
             verifyIncomeSourceDetailsCall(testMtditid)
             IncomeTaxViewChangeStub.verifyGetFinancialDetails(testNino, s"${testTaxYear.toInt - 1}-04-06", s"${testTaxYear.toInt}-04-05")
@@ -373,15 +372,15 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
 
             And("I wiremock stub a single financial details response")
             val mixedJson = Json.obj(
-              "documentDetails" -> Json.arr(
+              "docDetails" -> Json.arr(
                 documentDetailJson(3400.00, 1000.00, testTaxYear.toString),
                 documentDetailJson(1000.00, 100.00, testTaxYear.toString, "ITSA- POA 1"),
                 documentDetailJson(1000.00, 0.00, testTaxYear.toString, "ITSA - POA 2")
               ),
               "financialDetails" -> Json.arr(
                 financialDetailJson(testTaxYear.toString),
-                financialDetailJson(testTaxYear.toString, "SA Payment on Account 1", LocalDate.now().plusDays(1).toString),
-                financialDetailJson(testTaxYear.toString, "SA Payment on Account 2", LocalDate.now().minusDays(1).toString)
+                financialDetailJson(testTaxYear.toString, "ITSA- POA 1", LocalDate.now().plusDays(1).toString),
+                financialDetailJson(testTaxYear.toString, "ITSA - POA 2", LocalDate.now().minusDays(1).toString)
               )
             )
 
@@ -397,7 +396,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
 
             AuditStub.verifyAuditContainsDetail(WhatYouOweRequestAuditModel(testUser).detail)
 
-            AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, financialDetailsOneZeroOutstandingAmount).detail)
+            AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweWithAZeroOutstandingAmount).detail)
 
             verifyIncomeSourceDetailsCall(testMtditid)
             IncomeTaxViewChangeStub.verifyGetFinancialDetails(testNino, s"${testTaxYear - 1}-04-06", s"$testTaxYear-04-05")
@@ -644,7 +643,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
 
             And("I wiremock stub a mixed financial details response")
             val mixedJson = Json.obj(
-              "documentDetails" -> Json.arr(
+              "docDetails" -> Json.arr(
                 documentDetailJson(3400.00, 1000.00, testTaxYear.toString, "test"),
                 documentDetailJson(1000.00, 0, testTaxYear.toString, "4444"),
                 documentDetailJson(1000.00, 3000.00, testTaxYear.toString, "5555")
@@ -710,7 +709,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
 
             And("I wiremock stub a mixed financial details response")
             val mixedJson = Json.obj(
-              "documentDetails" -> Json.arr(
+              "docDetails" -> Json.arr(
                 documentDetailJson(3400.00, 1000.00, testTaxYear.toString, "test"),
                 documentDetailJson(1000.00, 0, testTaxYear.toString, "3333"),
                 documentDetailJson(1000.00, 3000.00, testTaxYear.toString, "4444")
@@ -777,6 +776,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase {
             And("I wiremock stub a mixed financial details response")
             IncomeTaxViewChangeStub.stubGetFinancialDetailsResponse(testNino, s"${testTaxYear.toInt - 1}-04-06", s"${testTaxYear.toInt}-04-05")(OK,
               testValidFinancialDetailsModelJson(2000, 2000, testTaxYear.toString, LocalDate.now().plusYears( 1).toString))
+
             IncomeTaxViewChangeStub.stubGetOutstandingChargesResponse(
               "utr", testSaUtr.toLong, (testTaxYear - 1).toString)(OK, validOutStandingChargeResponseJsonWithoutAciAndBcdCharges)
 

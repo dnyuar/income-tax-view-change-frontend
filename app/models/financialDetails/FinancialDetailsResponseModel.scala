@@ -23,13 +23,13 @@ import java.time.LocalDate
 
 sealed trait FinancialDetailsResponseModel
 
-case class FinancialDetailsModel(documentDetails: List[DocumentDetail],
+case class FinancialDetailsModel(docDetails: List[DocumentDetail],
                                  financialDetails: List[FinancialDetail]) extends FinancialDetailsResponseModel {
 
   val documentDescriptionToFinancialMainType: String => String = {
-    case "ITSA- POA 1" => "SA Payment on Account 1"
-    case "ITSA - POA 2" => "SA Payment on Account 2"
-    case "ITSA- Bal Charge" => "SA Balancing Charge"
+    case "ITSA- POA 1" => "ITSA- POA 1"
+    case "ITSA - POA 2" => "ITSA - POA 2"
+    case "ITSA- Bal Charge" => "ITSA- Bal Charge"
     case other => other
   }
 
@@ -43,7 +43,7 @@ case class FinancialDetailsModel(documentDetails: List[DocumentDetail],
   }
 
   def getAllDueDates: List[LocalDate] = {
-    documentDetails.filter(_.documentDescription.isDefined)
+    docDetails.filter(_.documentDescription.isDefined)
       .map(documentDetail => (documentDetail.taxYear, documentDescriptionToFinancialMainType(documentDetail.documentDescription.get)))
       .flatMap { case (taxYear, mainType) =>
         financialDetails.find(financialDetail => financialDetail.mainType.contains(mainType) && financialDetail.taxYear == taxYear)
@@ -51,7 +51,7 @@ case class FinancialDetailsModel(documentDetails: List[DocumentDetail],
       .map(LocalDate.parse)
   }
 
-  def findDocumentDetailForTaxYear(taxYear: Int): Option[DocumentDetail] = documentDetails.find(_.taxYear.toInt == taxYear)
+  def findDocumentDetailForTaxYear(taxYear: Int): Option[DocumentDetail] = docDetails.find(_.taxYear.toInt == taxYear)
 
   def findDocumentDetailForYearWithDueDate(taxYear: Int): Option[DocumentDetailWithDueDate] = {
     findDocumentDetailForTaxYear(taxYear)
@@ -59,15 +59,15 @@ case class FinancialDetailsModel(documentDetails: List[DocumentDetail],
   }
 
   def findDocumentDetailByIdWithDueDate(id: String): Option[DocumentDetailWithDueDate] = {
-    documentDetails.find(_.transactionId == id)
+    docDetails.find(_.transactionId == id)
       .map(documentDetail => DocumentDetailWithDueDate(documentDetail, getDueDateFor(documentDetail)))
   }
 
   def getAllDocumentDetailsWithDueDates: List[DocumentDetailWithDueDate] = {
-    documentDetails.map(documentDetail => DocumentDetailWithDueDate(documentDetail, getDueDateFor(documentDetail)))
+    docDetails.map(documentDetail => DocumentDetailWithDueDate(documentDetail, getDueDateFor(documentDetail)))
   }
 
-  def isAllPaid()(implicit user: MtdItUser[_]): Boolean = documentDetails.forall(_.isPaid)
+  def isAllPaid()(implicit user: MtdItUser[_]): Boolean = docDetails.forall(_.isPaid)
 
 }
 

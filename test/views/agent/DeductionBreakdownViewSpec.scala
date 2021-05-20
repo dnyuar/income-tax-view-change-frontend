@@ -17,7 +17,7 @@
 package views.agent
 
 import assets.MessagesLookUp.DeductionBreakdown
-import assets.CalcBreakdownTestConstants
+import assets.CalcBreakdownTestConstants._
 import config.FrontendAppConfig
 import enums.Estimate
 import models.calculation.CalcDisplayModel
@@ -34,7 +34,7 @@ class DeductionBreakdownViewSpec extends ViewSpec {
 
   class DeductionBreakdownSetup() extends Setup(
     deductionBreakdown( CalcDisplayModel("", 1,
-      CalcBreakdownTestConstants.calculationNoBillModel,
+      calculationNoBillModel,
       Estimate),taxYear2017,"testBackURL")
   )
 
@@ -78,7 +78,7 @@ class DeductionBreakdownViewSpec extends ViewSpec {
 
       class DeductionBreakdownSetup2018() extends Setup(
         deductionBreakdown(CalcDisplayModel("", 1,
-          CalcBreakdownTestConstants.calculationAllDeductionSources,
+          calculationAllDeductionSources,
           Estimate),taxYear2018,"testBackURL")
       )
 

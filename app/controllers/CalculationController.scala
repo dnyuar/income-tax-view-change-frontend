@@ -65,13 +65,13 @@ class CalculationController @Inject()(authenticate: AuthenticationPredicate,
                        taxYear: Int,
                        calculation: Calculation,
                        transaction: Option[TransactionModel] = None,
-                       charge: Option[DocumentDetailWithDueDate] = None
+                       docDateDetail: Option[DocumentDetailWithDueDate] = None
                      )(implicit request: Request[_]): Html = {
     taxYearOverviewOld(
       taxYear = taxYear,
       overview = CalcOverview(calculation, transaction),
       transaction = transaction,
-      charge = charge,
+      charge = docDateDetail,
       incomeBreakdown = isEnabled(IncomeBreakdown),
       deductionBreakdown = isEnabled(DeductionBreakdown),
       taxDue = isEnabled(TaxDue),
@@ -92,8 +92,8 @@ class CalculationController @Inject()(authenticate: AuthenticationPredicate,
                   Logger.error(s"[CalculationController][showCalculationForYear] - Could not retrieve financial details model for year: $taxYear")
                   itvcErrorHandler.showInternalServerError()
                 case financialDetailsModel: FinancialDetailsModel =>
-                  val charge = financialDetailsModel.findDocumentDetailForYearWithDueDate(taxYear)
-                  Ok(viewOld(taxYear, calculation, charge = charge))
+                  val docDateDetail = financialDetailsModel.findDocumentDetailForYearWithDueDate(taxYear)
+                  Ok(viewOld(taxYear, calculation, docDateDetail = docDateDetail))
               }
             } else {
               financialTransactionsService.getFinancialTransactions(user.mtditid, taxYear) map {
@@ -117,14 +117,14 @@ class CalculationController @Inject()(authenticate: AuthenticationPredicate,
 
   private def view(taxYear: Int,
                    calculationOverview: Option[CalcOverview] = None,
-                   charge: List[DocumentDetailWithDueDate],
+                   docDateDetails: List[DocumentDetailWithDueDate],
                    obligations: ObligationsModel
                   )(implicit request: Request[_],
                     user: MtdItUser[_]): Html = {
     taxYearOverview(
       taxYear = taxYear,
       overviewOpt = calculationOverview,
-      charges = charge,
+      charges = docDateDetails,
       obligations,
       dateFormatter,
       backUrl = backUrl
@@ -157,19 +157,20 @@ class CalculationController @Inject()(authenticate: AuthenticationPredicate,
       calculationService.getCalculationDetail(user.nino, taxYear) flatMap {
         case CalcDisplayModel(_, calcAmount, calculation, _) =>
           auditingService.extendedAudit(BillsAuditModel(user, calcAmount))
-          withTaxYearFinancials(taxYear) { charges =>
+          withTaxYearFinancials(taxYear) { documentDetailsWithDueDate =>
             withObligationsModel(taxYear) map {
               case obligationsModel: ObligationsModel =>
-                auditingService.extendedAudit(TaxYearOverviewResponseAuditModel(user, None, calculation, charges, obligationsModel))
-                Ok(view(taxYear, calculationOverview = Some(CalcOverview(calculation, None)),charge = charges, obligations = obligationsModel))
-                  .addingToSession(SessionKeys.chargeSummaryBackPage -> "taxYearOverview")
+                auditingService.extendedAudit(TaxYearOverviewResponseAuditModel(user, None, calculation,
+                  documentDetailsWithDueDate, obligationsModel))
+                Ok(view(taxYear, calculationOverview = Some(CalcOverview(calculation, None)), docDateDetails = documentDetailsWithDueDate, obligations = obligationsModel))
+                .addingToSession(SessionKeys.chargeSummaryBackPage -> "taxYearOverview")
               case _ => itvcErrorHandler.showInternalServerError()
             }
           }
         case CalcDisplayNoDataFound =>
           withTaxYearFinancials(taxYear) { charges =>
             withObligationsModel(taxYear) map {
-              case obligationsModel: ObligationsModel => Ok(view(taxYear, charge = charges,
+              case obligationsModel: ObligationsModel => Ok(view(taxYear, docDateDetails = charges,
                 obligations = obligationsModel)).addingToSession(SessionKeys.chargeSummaryBackPage -> "taxYearOverview")
               case _ => itvcErrorHandler.showInternalServerError()
             }

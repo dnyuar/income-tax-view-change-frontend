@@ -16,12 +16,13 @@
 
 package controllers.agent
 
+import java.time.LocalDate
+
 import assets.BaseTestConstants.testAgentAuthRetrievalSuccess
 import assets.FinancialDetailsTestConstants.{fullDocumentDetailModel, fullFinancialDetailModel, testFinancialDetailsErrorModelParsing}
 import audit.mocks.MockAuditingService
 import config.ItvcErrorHandler
 import config.featureswitch.{AgentViewer, FeatureSwitching, NewFinancialDetailsApi}
-import implicits.ImplicitDateFormatterImpl
 import mocks.auth.MockFrontendAuthorisedFunctions
 import mocks.services.{MockFinancialDetailsService, MockIncomeSourceDetailsService}
 import mocks.views.MockChargeSummary
@@ -31,10 +32,8 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.Helpers.{defaultAwaitTimeout, redirectLocation}
 import play.twirl.api.Html
 import testUtils.TestSupport
-import uk.gov.hmrc.play.language.LanguageUtils
 
-import java.time.LocalDate
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class ChargeSummaryControllerSpec extends TestSupport
   with MockFrontendAuthorisedFunctions
@@ -61,10 +60,10 @@ class ChargeSummaryControllerSpec extends TestSupport
       mockIncomeSourceDetailsService,
       mockAuditingService
     )(appConfig,
-      app.injector.instanceOf[LanguageUtils],
+      languageUtils,
       app.injector.instanceOf[MessagesControllerComponents],
-      app.injector.instanceOf[ImplicitDateFormatterImpl],
-      app.injector.instanceOf[ExecutionContext],
+      mockImplicitDateFormatter,
+      ec,
       app.injector.instanceOf[ItvcErrorHandler]
     )
   }
@@ -82,7 +81,7 @@ class ChargeSummaryControllerSpec extends TestSupport
               setupMockAgentAuthRetrievalSuccess(testAgentAuthRetrievalSuccess)
 
               setupMockGetFinancialDetails(currentYear)(FinancialDetailsModel(
-                documentDetails = List(fullDocumentDetailModel.copy(taxYear = currentYear.toString, transactionId = "testid")),
+                docDetails = List(fullDocumentDetailModel.copy(taxYear = currentYear.toString, transactionId = "testid")),
                 financialDetails = List(fullFinancialDetailModel.copy(taxYear = currentYear.toString))
               ))
 
@@ -103,7 +102,7 @@ class ChargeSummaryControllerSpec extends TestSupport
               setupMockAgentAuthRetrievalSuccess(testAgentAuthRetrievalSuccess)
 
               setupMockGetFinancialDetails(currentYear)(FinancialDetailsModel(
-                documentDetails = List(fullDocumentDetailModel.copy(taxYear = currentYear.toString, transactionId = "NotTestid")),
+                docDetails = List(fullDocumentDetailModel.copy(taxYear = currentYear.toString, transactionId = "NotTestid")),
                 financialDetails = List(fullFinancialDetailModel.copy(taxYear = currentYear.toString))
               ))
 

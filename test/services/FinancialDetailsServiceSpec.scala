@@ -52,7 +52,7 @@ class FinancialDetailsServiceSpec extends TestSupport with MockIncomeTaxViewChan
   private def getFinancialDetailSuccess(taxYear: Int,
                                         documentDetails: List[DocumentDetail] = List(fullDocumentDetailModel),
                                         financialDetails: List[FinancialDetail] = List(fullFinancialDetailModel)): FinancialDetailsModel = {
-    FinancialDetailsModel(documentDetails = documentDetails, financialDetails = financialDetails)
+    FinancialDetailsModel(docDetails = documentDetails, financialDetails = financialDetails)
   }
 
   private def mtdUser(numYears: Int): MtdItUser[_] = MtdItUser(
@@ -116,7 +116,7 @@ class FinancialDetailsServiceSpec extends TestSupport with MockIncomeTaxViewChan
     "a financial detail returned from the connector returns a non 404 error model" should {
       "return an InternalServerException" in {
         val financialDetails: FinancialDetailsModel = FinancialDetailsModel(
-          documentDetails = List(
+          docDetails = List(
             DocumentDetail("testYear", "testTransactionId", None, Some(100.00), None),
             DocumentDetail("testYear2", "testTransactionId", None, Some(100.00), None)
           ),
@@ -146,18 +146,18 @@ class FinancialDetailsServiceSpec extends TestSupport with MockIncomeTaxViewChan
       "return a single overdue date" when {
         "there is only one overdue date" in {
           val financialDetailsCurrentYear: FinancialDetailsModel = FinancialDetailsModel(
-            documentDetails = List(
+            docDetails = List(
               DocumentDetail("testYear1", "testTransactionId", Some("ITSA- POA 1"), Some(100.00), None),
               DocumentDetail("testYear1", "testTransactionId", Some("ITSA - POA 2"), Some(200.00), None)
             ),
             financialDetails = List(
-              FinancialDetail("testYear1", Some("SA Payment on Account 1"), Some(Seq(SubItem(Some(LocalDate.now.minusDays(1).toString))))),
-              FinancialDetail("testYear1", Some("SA Payment on Account 2"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(1).toString)))))
+              FinancialDetail("testYear1", Some("ITSA- POA 1"), Some(Seq(SubItem(Some(LocalDate.now.minusDays(1).toString))))),
+              FinancialDetail("testYear1", Some("ITSA - POA 2"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(1).toString)))))
             )
           )
 
           val financialDetailsLastYear: FinancialDetailsModel = FinancialDetailsModel(
-            documentDetails = List(
+            docDetails = List(
               DocumentDetail("testYear2", "testTransactionId", None, Some(100.00), None),
               DocumentDetail("testYear2", "testTransactionId", None, None, None)
             ),
@@ -184,7 +184,7 @@ class FinancialDetailsServiceSpec extends TestSupport with MockIncomeTaxViewChan
       "return a single non-overdue date" when {
         "there are no overdue dates, but there are dates upcoming" in {
           val financialDetailsCurrentYear: FinancialDetailsModel = FinancialDetailsModel(
-            documentDetails = List(
+            docDetails = List(
               DocumentDetail("testYear1", "testTransactionId", None, Some(100.00), None),
               DocumentDetail("testYear1", "testTransactionId", None, Some(100.00), None)
             ),
@@ -195,13 +195,13 @@ class FinancialDetailsServiceSpec extends TestSupport with MockIncomeTaxViewChan
           )
 
           val financialDetailsLastYear: FinancialDetailsModel = FinancialDetailsModel(
-            documentDetails = List(
+            docDetails = List(
               DocumentDetail("testYear2", "testTransactionId", None, None, None),
               DocumentDetail("testYear2", "testTransactionId", Some("ITSA- POA 1"), Some(100.00), None)
             ),
             financialDetails = List(
-              FinancialDetail("testYear2", Some("SA Payment on Account 1"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(3).toString))))),
-              FinancialDetail("testYear2", Some("SA Payment on Account 2"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(5).toString)))))
+              FinancialDetail("testYear2", Some("ITSA- POA 1"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(3).toString))))),
+              FinancialDetail("testYear2", Some("ITSA - POA 2"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(5).toString)))))
             )
           )
 
@@ -222,24 +222,24 @@ class FinancialDetailsServiceSpec extends TestSupport with MockIncomeTaxViewChan
       "return the count of overdue dates" when {
         "there are more than one overdue dates" in {
           val financialDetailsCurrentYear: FinancialDetailsModel = FinancialDetailsModel(
-            documentDetails = List(
+            docDetails = List(
               DocumentDetail("testYear1", "testTransactionId", Some("ITSA- POA 1"), Some(100.00), Some(0.00)),
               DocumentDetail("testYear1", "testTransactionId", Some("ITSA - POA 2"), Some(100.00), Some(0.00))
             ),
             financialDetails = List(
-              FinancialDetail("testYear1", Some("SA Payment on Account 1"), Some(Seq(SubItem(Some(LocalDate.now.minusDays(1).toString))))),
-              FinancialDetail("testYear1", Some("SA Payment on Account 2"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(1).toString)))))
+              FinancialDetail("testYear1", Some("ITSA- POA 1"), Some(Seq(SubItem(Some(LocalDate.now.minusDays(1).toString))))),
+              FinancialDetail("testYear1", Some("ITSA - POA 2"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(1).toString)))))
             )
           )
 
           val financialDetailsLastYear: FinancialDetailsModel = FinancialDetailsModel(
-            documentDetails = List(
+            docDetails = List(
               DocumentDetail("testYear2", "testTransactionId", Some("ITSA- POA 1"), Some(100.00), Some(0.00)),
               DocumentDetail("testYear2", "testTransactionId", Some("ITSA - POA 2"), Some(100.00), Some(0.00))
             ),
             financialDetails = List(
-              FinancialDetail("testYear2", Some("SA Payment on Account 1"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(3).toString))))),
-              FinancialDetail("testYear2", Some("SA Payment on Account 2"), Some(Seq(SubItem(Some(LocalDate.now.minusDays(2).toString)))))
+              FinancialDetail("testYear2", Some("ITSA- POA 1"), Some(Seq(SubItem(Some(LocalDate.now.plusDays(3).toString))))),
+              FinancialDetail("testYear2", Some("ITSA - POA 2"), Some(Seq(SubItem(Some(LocalDate.now.minusDays(2).toString)))))
             )
           )
 

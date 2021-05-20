@@ -16,7 +16,7 @@
 
 package views.agent
 
-import assets.CalcBreakdownTestConstants
+import assets.CalcBreakdownTestConstants._
 import assets.MessagesLookUp.IncomeBreakdown
 import enums.Estimate
 import models.calculation.{AllowancesAndDeductions, CalcDisplayModel, CalcOverview, Calculation}
@@ -49,7 +49,7 @@ class IncomeBreakdownViewSpec extends ViewSpec {
       val taxYear = 2017
 
       lazy val view = incomeBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.calculationNoBillModel,
+        calculationNoBillModel,
         Estimate), taxYear, backUrl)
 
       "have the correct title" in new Setup(view) {
@@ -84,7 +84,7 @@ class IncomeBreakdownViewSpec extends ViewSpec {
       val taxYear = 2018
 
       lazy val view = incomeBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.calculationAllIncomeSources,
+        calculationAllIncomeSources,
         Estimate), taxYear, backUrl)
 
       "have the correct title" in new Setup(view) {

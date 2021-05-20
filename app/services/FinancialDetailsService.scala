@@ -44,7 +44,7 @@ class FinancialDetailsService @Inject()(val incomeTaxViewChangeConnector: Income
       getFinancialDetails(item, user.nino)
     )) map { financialDetails =>
       val chargeDueDates: List[LocalDate] = financialDetails.flatMap {
-        case fdm: FinancialDetailsModel => fdm.documentDetails.filterNot(_.isPaid) flatMap { documentDetail =>
+        case fdm: FinancialDetailsModel => fdm.docDetails.filterNot(_.isPaid) flatMap { documentDetail =>
           fdm.getDueDateFor(documentDetail)
         }
         case FinancialDetailsErrorModel(NOT_FOUND, _) => List.empty[LocalDate]
@@ -85,7 +85,7 @@ class FinancialDetailsService @Inject()(val incomeTaxViewChangeConnector: Income
         case (_, errorModel: FinancialDetailsErrorModel) => errorModel
         case (_, financialDetails: FinancialDetailsModel) if !financialDetails.isAllPaid =>
           financialDetails.copy(
-            documentDetails = financialDetails.documentDetails.filterNot(_.isPaid)
+            docDetails = financialDetails.docDetails.filterNot(_.isPaid)
           )
       }
     }

@@ -16,6 +16,7 @@
 
 package controllers
 
+import java.time.{LocalDate, ZonedDateTime}
 import assets.MessagesLookUp
 import config.featureswitch.{FeatureSwitching, NewFinancialDetailsApi, Payment}
 import config.{FrontendAppConfig, ItvcErrorHandler, ItvcHeaderCarrierForPartialsConverter}
@@ -23,7 +24,7 @@ import controllers.predicates.{NinoPredicate, SessionTimeoutPredicate}
 import implicits.ImplicitDateFormatterImpl
 import mocks.controllers.predicates.{MockAuthenticationPredicate, MockIncomeSourceDetailsPredicate}
 import models.calculation.Calculation
-import models.financialDetails.{DocumentDetail, FinancialDetail, FinancialDetailsErrorModel, FinancialDetailsModel, SubItem}
+import models.financialDetails._
 import models.financialTransactions.{FinancialTransactionsErrorModel, FinancialTransactionsModel, SubItemModel, TransactionModel}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -34,7 +35,6 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import services.{FinancialDetailsService, FinancialTransactionsService, ReportDeadlinesService}
 import utils.CurrentDateProvider
 
-import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.Future
 
 class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSourceDetailsPredicate with FeatureSwitching {
@@ -193,8 +193,8 @@ class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSour
           mockSingleBusinessIncomeSource()
           when(financialDetailsService.getFinancialDetails(any(), any())(any()))
             .thenReturn(Future.successful(FinancialDetailsModel(
-              documentDetails = List(DocumentDetail(nextPaymentYear, "testId", Some("ITSA- POA 1"), Some(1000.00), None)),
-              financialDetails = List(FinancialDetail(taxYear = nextPaymentYear, mainType = Some("SA Payment on Account 1"),
+              docDetails = List(DocumentDetail(nextPaymentYear, "testId", Some("ITSA- POA 1"), Some(1000.00), None)),
+              financialDetails = List(FinancialDetail(taxYear = nextPaymentYear, mainType = Some("ITSA- POA 1"),
                 items = Some(Seq(SubItem(dueDate = Some(nextPaymentDate.toString))))))
             )))
 
@@ -213,20 +213,20 @@ class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSour
           mockSingleBusinessIncomeSource()
 
           when(financialDetailsService.getFinancialDetails(any(), any())(any()))
-            .thenReturn(Future.successful(FinancialDetailsModel(documentDetails = List(DocumentDetail(nextPaymentYear2, "testId", None, Some(1000.00), None)),
+            .thenReturn(Future.successful(FinancialDetailsModel(docDetails = List(DocumentDetail(nextPaymentYear2, "testId", None, Some(1000.00), None)),
               financialDetails = List(FinancialDetail(taxYear = nextPaymentYear2, items = Some(Seq(SubItem(dueDate = Some(nextPaymentDate2.toString))))))
             )))
           when(financialDetailsService.getFinancialDetails(matches(2018), any())(any()))
             .thenReturn(Future.successful(FinancialDetailsModel(
-              documentDetails = List(DocumentDetail(nextPaymentYear2, "testId", Some("ITSA- POA 1"), Some(1000.00), None)),
-              financialDetails = List(FinancialDetail(taxYear = nextPaymentYear2, mainType = Some("SA Payment on Account 1"),
+              docDetails = List(DocumentDetail(nextPaymentYear2, "testId", Some("ITSA- POA 1"), Some(1000.00), None)),
+              financialDetails = List(FinancialDetail(taxYear = nextPaymentYear2, mainType = Some("ITSA- POA 1"),
                 items = Some(Seq(SubItem(dueDate = Some(nextPaymentDate2.toString))))))
             )))
 
           when(financialDetailsService.getFinancialDetails(matches(2019), any())(any()))
             .thenReturn(Future.successful(FinancialDetailsModel(
-              documentDetails = List(DocumentDetail(nextPaymentYear, "id", Some("ITSA - POA 2"), Some(1000.00), None)),
-              financialDetails = List(FinancialDetail(nextPaymentYear, mainType = Some("SA Payment on Account 2"),
+              docDetails = List(DocumentDetail(nextPaymentYear, "id", Some("ITSA - POA 2"), Some(1000.00), None)),
+              financialDetails = List(FinancialDetail(nextPaymentYear, mainType = Some("ITSA - POA 2"),
                 items = Some(Seq(SubItem(dueDate = Some(nextPaymentDate.toString))))))
             )))
 
@@ -276,7 +276,7 @@ class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSour
             mockSingleBusinessIncomeSource()
             when(financialDetailsService.getFinancialDetails(any(), any())(any()))
               .thenReturn(Future.successful(FinancialDetailsModel(
-                documentDetails = List(DocumentDetail(nextPaymentYear, "testId", None, Some(0), None)),
+                docDetails = List(DocumentDetail(nextPaymentYear, "testId", None, Some(0), None)),
                 financialDetails = List(FinancialDetail(nextPaymentYear, items = Some(Seq(SubItem(dueDate = Some(nextPaymentDate.toString))))))
               )))
 
@@ -296,7 +296,7 @@ class HomeControllerSpec extends MockAuthenticationPredicate with MockIncomeSour
           mockSingleBusinessIncomeSource()
           when(financialDetailsService.getFinancialDetails(any(), any())(any()))
             .thenReturn(Future.successful(FinancialDetailsModel(
-              documentDetails = List(DocumentDetail(nextPaymentYear, "testId", None, Some(1000.00), None)),
+              docDetails = List(DocumentDetail(nextPaymentYear, "testId", None, Some(1000.00), None)),
               financialDetails = List(FinancialDetail(nextPaymentYear, items = Some(Seq(SubItem(dueDate = Some(nextPaymentDate.toString))))))
             )))
 

@@ -18,12 +18,13 @@ package audit.models
 
 import java.time.LocalDate
 
+import assets.BaseTestConstants.taxYear
 import assets.CalcBreakdownTestConstants.calculationDataSuccessModel
 import assets.FinancialDetailsTestConstants.financialDetailsModel
 import auth.MtdItUser
 import models.calculation.Calculation
 import models.core.AccountingPeriodModel
-import models.financialDetails.Charge
+import models.financialDetails.{DocumentDetail, DocumentDetailWithDueDate}
 import models.incomeSourceDetails.{BusinessDetailsModel, IncomeSourceDetailsModel}
 import models.reportDeadlines.{ObligationsModel, ReportDeadlineModel, ReportDeadlinesModel}
 import org.scalatest.{MustMatchers, WordSpecLike}
@@ -38,7 +39,21 @@ class TaxYearOverviewResponseAuditModelSpec extends WordSpecLike with MustMatche
 
   val calculation: Calculation = calculationDataSuccessModel
 
-  val payments: List[Charge] = financialDetailsModel(2020).financialDetails
+  val payments: List[DocumentDetailWithDueDate] = financialDetailsModel(2020).getAllDocumentDetailsWithDueDates
+
+
+    val docDetail: DocumentDetail = DocumentDetail(
+      taxYear = taxYear,
+      transactionId = "1040000124",
+      documentDescription = Some("ITSA- POA 1"),
+      originalAmount = Some(10.34),
+      outstandingAmount = Some(0)
+    )
+
+    val docDateDetail: DocumentDetailWithDueDate = DocumentDetailWithDueDate(
+      documentDetail = docDetail,
+      dueDate = Some(LocalDate.now())
+    )
 
   val getCurrentTaxYearEnd: LocalDate = {
     val currentDate: LocalDate = LocalDate.now
@@ -124,7 +139,7 @@ class TaxYearOverviewResponseAuditModelSpec extends WordSpecLike with MustMatche
             "amount" -> 1400,
             "dueDate" -> "2019-05-15",
             "paymentType" -> "Payment on account 1 of 2",
-            "status" -> "part-paid"
+            "status" -> "unpaid"
           )),
           "updates" -> Seq(Json.obj(
             "incomeSource" -> "Test Trading Name",
@@ -154,7 +169,7 @@ class TaxYearOverviewResponseAuditModelSpec extends WordSpecLike with MustMatche
             "amount" -> 1400,
             "dueDate" -> "2019-05-15",
             "paymentType" -> "Payment on account 1 of 2",
-            "status" -> "part-paid"
+            "status" -> "unpaid"
           )),
           "updates" -> Seq(Json.obj(
             "incomeSource" -> "Test Trading Name",

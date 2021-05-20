@@ -31,7 +31,7 @@ class WhatYouOweChargesListModelSpec extends UnitSpec with Matchers {
 
   val financialDetailsDueInMoreThan30Days: FinancialDetailsModel = testFinancialDetailsModel(
     List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     List(Some(LocalDate.now().plusDays(45).toString), Some(LocalDate.now().plusDays(50).toString)),
     List(Some(50), Some(75)),
     LocalDate.now().getYear.toString
@@ -39,7 +39,7 @@ class WhatYouOweChargesListModelSpec extends UnitSpec with Matchers {
 
   val financialDetailsDueIn30Days: FinancialDetailsModel = testFinancialDetailsModel(
     List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     List(Some(LocalDate.now().toString), Some(LocalDate.now().plusDays(1).toString)),
     List(Some(50), Some(75)),
     LocalDate.now().getYear.toString
@@ -47,7 +47,7 @@ class WhatYouOweChargesListModelSpec extends UnitSpec with Matchers {
 
   val financialDetailsOverdueData: FinancialDetailsModel = testFinancialDetailsModel(
     List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     List(Some(LocalDate.now().minusDays(10).toString), Some(LocalDate.now().minusDays(1).toString)),
     List(Some(50), Some(75)),
     LocalDate.now().getYear.toString

@@ -47,8 +47,8 @@ class TaxYearOverviewController @Inject()(taxYearOverview: TaxYearOverview,
                                           financialDetailsService: FinancialDetailsService,
                                           incomeSourceDetailsService: IncomeSourceDetailsService,
                                           reportDeadlinesService: ReportDeadlinesService,
-                                          auditingService: AuditingService
-                                         )(implicit val appConfig: FrontendAppConfig,
+                                          auditingService: AuditingService)
+                                         (implicit val appConfig: FrontendAppConfig,
                                            val languageUtils: LanguageUtils,
                                            mcc: MessagesControllerComponents,
                                            dateFormatter: ImplicitDateFormatterImpl,
@@ -64,7 +64,8 @@ class TaxYearOverviewController @Inject()(taxYearOverview: TaxYearOverview,
           withCalculation(getClientNino(request), taxYear) { calculation =>
             withTaxYearFinancials(taxYear) { documentDetailsWithDueDates =>
               withObligationsModel(taxYear) { obligations =>
-                auditingService.extendedAudit(TaxYearOverviewResponseAuditModel(mtdItUser, user.agentReferenceNumber, calculation, charges, obligations))
+                auditingService.extendedAudit(TaxYearOverviewResponseAuditModel(mtdItUser, user.agentReferenceNumber, calculation,
+                  documentDetailsWithDueDates, obligations))
                 Future.successful(Ok(view(
                   taxYear,
                   calculation,

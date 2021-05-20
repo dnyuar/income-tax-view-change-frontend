@@ -16,8 +16,6 @@
 
 package controllers
 
-import java.time.LocalDate
-
 import audit.AuditingService
 import audit.models.HomeAudit
 import auth.MtdItUser
@@ -25,7 +23,6 @@ import config.featureswitch._
 import config.{FrontendAppConfig, ItvcErrorHandler, ItvcHeaderCarrierForPartialsConverter}
 import controllers.predicates.{AuthenticationPredicate, IncomeSourceDetailsPredicate, NinoPredicate, SessionTimeoutPredicate}
 import implicits.ImplicitDateFormatterImpl
-import javax.inject.{Inject, Singleton}
 import models.financialDetails.FinancialDetailsModel
 import models.financialTransactions.FinancialTransactionsModel
 import play.api.Logger
@@ -36,6 +33,8 @@ import services.{FinancialDetailsService, FinancialTransactionsService, ReportDe
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import utils.CurrentDateProvider
 
+import java.time.LocalDate
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -85,7 +84,7 @@ class HomeController @Inject()(val checkSessionTimeout: SessionTimeoutPredicate,
             case ftm: FinancialTransactionsModel if ftm.financialTransactions.nonEmpty =>
               ftm.financialTransactions.get.exists(!_.isPaid)
             case fdm: FinancialDetailsModel if fdm.financialDetails.nonEmpty =>
-              fdm.documentDetails.exists(!_.isPaid)
+              fdm.docDetails.exists(!_.isPaid)
             case _ =>
               false
           }) flatMap {

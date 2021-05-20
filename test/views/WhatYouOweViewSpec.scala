@@ -62,7 +62,7 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
 
   val financialDetailsDueInMoreThan30Days: FinancialDetailsModel = testFinancialDetailsModel(
     documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    mainType = List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     dueDate = List(Some(LocalDate.now().plusDays(45).toString), Some(LocalDate.now().plusDays(50).toString)),
     outstandingAmount = List(Some(50), Some(75)),
     taxYear = LocalDate.now().getYear.toString
@@ -76,7 +76,7 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
 
   val financialDetailsDueIn30Days: FinancialDetailsModel = testFinancialDetailsModel(
     documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    mainType = List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     dueDate = List(Some(LocalDate.now().toString), Some(LocalDate.now().plusDays(1).toString)),
     outstandingAmount = List(Some(50), Some(75)),
     taxYear = LocalDate.now().getYear.toString
@@ -90,7 +90,7 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
 
   val financialDetailsOverdueData: FinancialDetailsModel = testFinancialDetailsModel(
     documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    mainType = List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     dueDate = List(Some(LocalDate.now().minusDays(10).toString), Some(LocalDate.now().minusDays(1).toString)),
     outstandingAmount = List(Some(50), Some(75)),
     taxYear = LocalDate.now().getYear.toString
@@ -105,7 +105,7 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
 
   val financialDetailsWithMixedData: FinancialDetailsModel = testFinancialDetailsModelWithChargesOfSameType(
     documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    mainType = List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     dueDate = List(Some(LocalDate.now().plusDays(35).toString), Some(LocalDate.now().plusDays(30).toString)),
     outstandingAmount = List(Some(25), Some(50)),
     taxYear = LocalDate.now().getYear.toString
@@ -119,7 +119,7 @@ class WhatYouOweViewSpec extends TestSupport with FeatureSwitching with Implicit
 
   val financialDetailsWithMixedData2: FinancialDetailsModel = testFinancialDetailsModelWithChargesOfSameType(
     documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    mainType = List(Some("SA Payment on Account 1"), Some("SA Payment on Account 2")),
+    mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     dueDate = List(Some(LocalDate.now().plusDays(30).toString), Some(LocalDate.now().minusDays(1).toString)),
     outstandingAmount = List(Some(50), Some(75)),
     taxYear = LocalDate.now().getYear.toString

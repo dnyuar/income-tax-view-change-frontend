@@ -15,8 +15,11 @@
  */
 package controllers.agent
 
+import java.time.{LocalDate, LocalDateTime}
+
 import assets.BaseIntegrationTestConstants._
-import assets.CalcDataIntegrationTestConstants.{calculationDataSuccessModel, estimatedCalculationFullJson}
+import assets.CalcBreakdownIntegrationTestConstants.calculationDataSuccessModel
+import assets.CalcDataIntegrationTestConstants.estimatedCalculationFullJson
 import assets.messages.TaxYearOverviewMessages.agentTitle
 import audit.models.{ReportDeadlinesRequestAuditModel, ReportDeadlinesResponseAuditModel, TaxYearOverviewRequestAuditModel, TaxYearOverviewResponseAuditModel}
 import auth.MtdItUser
@@ -38,8 +41,6 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.retrieve.Name
-
-import java.time.{LocalDate, LocalDateTime}
 
 class TaxYearOverviewControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
@@ -96,7 +97,7 @@ class TaxYearOverviewControllerISpec extends ComponentSpecBase with FeatureSwitc
   )
 
   val financialDetailsSuccess: FinancialDetailsModel = FinancialDetailsModel(
-    documentDetails = List(
+    docDetails = List(
       DocumentDetail(
         taxYear = getCurrentTaxYearEnd.getYear.toString,
         transactionId = "testTransactionId",
@@ -108,7 +109,7 @@ class TaxYearOverviewControllerISpec extends ComponentSpecBase with FeatureSwitc
     financialDetails = List(
       FinancialDetail(
         taxYear = getCurrentTaxYearEnd.getYear.toString,
-        mainType = Some("SA Payment on Account 1"),
+        mainType = Some("ITSA- POA 1"),
         items = Some(Seq(SubItem(Some(LocalDate.now.toString))))
       )
     )
@@ -322,7 +323,8 @@ class TaxYearOverviewControllerISpec extends ComponentSpecBase with FeatureSwitc
         )
 
         verifyAuditContainsDetail(TaxYearOverviewRequestAuditModel(testUser, Some("1")).detail)
-        verifyAuditContainsDetail(TaxYearOverviewResponseAuditModel(testUser, Some("1"), calculationDataSuccessModel, financialDetailsSuccess.financialDetails, allObligations).detail)
+        verifyAuditContainsDetail(TaxYearOverviewResponseAuditModel(testUser, Some("1"), calculationDataSuccessModel,
+          financialDetailsSuccess.getAllDocumentDetailsWithDueDates, allObligations).detail)
         verifyAuditContainsDetail(ReportDeadlinesRequestAuditModel(testUser).detail)
         verifyAuditContainsDetail(ReportDeadlinesResponseAuditModel(testUser, "testId", currentObligationsSuccess.obligations.flatMap(_.obligations)).detail)
         verifyAuditContainsDetail(ReportDeadlinesResponseAuditModel(testUser, "testId2", previousObligationsSuccess.obligations.flatMap(_.obligations)).detail)
@@ -570,7 +572,8 @@ class TaxYearOverviewControllerISpec extends ComponentSpecBase with FeatureSwitc
         )
 
         verifyAuditContainsDetail(TaxYearOverviewRequestAuditModel(testUser, Some("1")).detail)
-        verifyAuditContainsDetail(TaxYearOverviewResponseAuditModel(testUser, Some("1"), calculationDataSuccessModel, financialDetailsSuccess.financialDetails, currentObligationsSuccess).detail)
+        verifyAuditContainsDetail(TaxYearOverviewResponseAuditModel(testUser, Some("1"), calculationDataSuccessModel,
+          financialDetailsSuccess.getAllDocumentDetailsWithDueDates, currentObligationsSuccess).detail)
         verifyAuditContainsDetail(ReportDeadlinesRequestAuditModel(testUser).detail)
         verifyAuditContainsDetail(ReportDeadlinesResponseAuditModel(testUser, "testId", currentObligationsSuccess.obligations.flatMap(_.obligations)).detail)
       }

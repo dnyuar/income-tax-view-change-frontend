@@ -18,48 +18,13 @@ package assets
 
 import java.time.LocalDate
 
-import assets.BaseTestConstants.{testErrorMessage, testErrorNotFoundStatus, testErrorStatus}
-import models.financialDetails._
+import assets.BaseIntegrationTestConstants.{testErrorMessage, testErrorNotFoundStatus, testErrorStatus}
+import models.financialDetails.{DocumentDetail, DocumentDetailWithDueDate, FinancialDetail, FinancialDetailsErrorModel,
+  FinancialDetailsModel, SubItem, WhatYouOweChargesList}
 import models.outstandingCharges.{OutstandingChargeModel, OutstandingChargesModel}
 import play.api.libs.json.{JsValue, Json}
 
-object FinancialDetailsTestConstants {
-
-  val testValidFinancialDetailsModelJson: JsValue = Json.obj(
-    "docDetails" -> Json.arr(
-      Json.obj(
-        "taxYear" -> "2019",
-        "transactionId" -> "1040000123",
-        "documentDescription" -> "ITSA- Bal Charge",
-        "outstandingAmount" -> 10.33,
-        "originalAmount" -> 10.33
-      ),
-      Json.obj(
-        "taxYear" -> "2020",
-        "transactionId" -> "1040000124",
-        "documentDescription" -> "ITSA- Bal Charge",
-        "outstandingAmount" -> 10.34,
-        "originalAmount" -> 10.34
-      )
-    ),
-    "financialDetails" -> Json.arr(
-      Json.obj(
-        "taxYear" -> "2019",
-        "mainType" -> "ITSA- Bal Charge",
-        "items" -> Json.arr(
-          Json.obj("dueDate" -> "2019-05-15")
-        )
-      ),
-      Json.obj(
-        "taxYear" -> "2020",
-        "mainType" -> "ITSA- Bal Charge",
-        "items" -> Json.arr(
-          Json.obj("dueDate" -> "2019-05-18")
-        )
-      )
-    )
-  )
-
+object FinancialDetailIntegrationTestConstants {
 
   def documentDetailModel(taxYear: Int = 2018,
                           documentDescription: Option[String] = Some("ITSA- POA 1"),
@@ -140,45 +105,17 @@ object FinancialDetailsTestConstants {
       )
     )
 
-  def testFinancialDetailsModelOneItemInList(documentDescription: List[Option[String]],
-                                             mainType: List[Option[String]],
-                                             dueDate: List[Option[String]],
-                                             outstandingAmount: List[Option[BigDecimal]],
-                                             taxYear: String): FinancialDetailsModel =
-    FinancialDetailsModel(
-      docDetails = List(
-        DocumentDetail(taxYear, "1040000124", documentDescription.head, outstandingAmount.head, Some(43.21))
-      ),
-      financialDetails = List(
-        FinancialDetail(taxYear, mainType.head, Some(Seq(SubItem(dueDate.head))))
-      )
-    )
-
-  val testInvalidFinancialDetailsJson: JsValue = Json.obj(
-    "amount" -> "invalidAmount",
-    "payMethod" -> "Payment by Card",
-    "valDate" -> "2019-05-27"
-  )
-
-  val testFinancialDetailsErrorModelParsing: FinancialDetailsErrorModel = FinancialDetailsErrorModel(
-    testErrorStatus, "Json Validation Error. Parsing FinancialDetails Data Response")
-
-  val testFinancialDetailsErrorModel: FinancialDetailsErrorModel = FinancialDetailsErrorModel(testErrorStatus, testErrorMessage)
-  val testFinancialDetailsErrorModelJson: JsValue = Json.obj(
-    "code" -> testErrorStatus,
-    "message" -> testErrorMessage
-  )
-
-  val testFinancialDetailsNotFoundErrorModel: FinancialDetailsErrorModel = FinancialDetailsErrorModel(testErrorNotFoundStatus, testErrorMessage)
-
-
   def outstandingChargesModel(dueDate: String): OutstandingChargesModel = OutstandingChargesModel(
-    List(OutstandingChargeModel("BCD", Some(dueDate), 123456.67, 1234), OutstandingChargeModel("ACI", None, 12.67, 1234))
-  )
+    List(OutstandingChargeModel("BCD", Some(dueDate), 123456789012345.67, 1234), OutstandingChargeModel("ACI", None, 12.67, 1234)))
 
-  val outstandingChargesOverdueData: OutstandingChargesModel = outstandingChargesModel(LocalDate.now().minusDays(30).toString)
+  def outstandingChargesEmptyBCDModel(dueDate: String): OutstandingChargesModel = OutstandingChargesModel(
+    List(OutstandingChargeModel("LATE", Some(dueDate), 123456789012345.67, 1234)))
+
+  val outstandingChargesEmptyBCDModel: OutstandingChargesModel = outstandingChargesEmptyBCDModel(LocalDate.now().plusDays(30).toString)
 
   val outstandingChargesDueInMoreThan30Days: OutstandingChargesModel = outstandingChargesModel(LocalDate.now().plusDays(35).toString)
+
+  val outstandingChargesOverdueData: OutstandingChargesModel = outstandingChargesModel(LocalDate.now().minusYears(1).minusDays(30).toString)
 
   val outstandingChargesDueIn30Days: OutstandingChargesModel = outstandingChargesModel(LocalDate.now().plusDays(30).toString)
 
@@ -193,16 +130,16 @@ object FinancialDetailsTestConstants {
   val financialDetailsDueIn30Days: FinancialDetailsModel = testFinancialDetailsModel(
     documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    dueDate = List(Some(LocalDate.now().toString), Some(LocalDate.now().plusDays(1).toString)),
-    outstandingAmount = List(Some(50), Some(75)),
+    dueDate = List(Some(LocalDate.now().toString), Some(LocalDate.now().toString)),
+    outstandingAmount = List(Some(2000), Some(2000)),
     taxYear = LocalDate.now().getYear.toString
   )
 
   val financialDetailsOverdueData: FinancialDetailsModel = testFinancialDetailsModel(
     documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
     mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
-    dueDate = List(Some(LocalDate.now().minusDays(10).toString), Some(LocalDate.now().minusDays(1).toString)),
-    outstandingAmount = List(Some(50), Some(75)),
+    dueDate = List(Some(LocalDate.now().minusDays(15).toString), Some(LocalDate.now().minusDays(15).toString)),
+    outstandingAmount = List(Some(2000), Some(2000)),
     taxYear = LocalDate.now().getYear.toString
   )
 
@@ -222,9 +159,36 @@ object FinancialDetailsTestConstants {
     taxYear = LocalDate.now().getYear.toString
   )
 
+  val financialDetailsDueIn30DaysWithAZeroOutstandingAmount: FinancialDetailsModel = testFinancialDetailsModel(
+    documentDescription = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
+    mainType = List(Some("ITSA- POA 1"), Some("ITSA - POA 2")),
+    dueDate = List(Some(LocalDate.now().plusDays(1).toString), Some(LocalDate.now().toString)),
+    outstandingAmount = List(Some(100), Some(0)),
+    taxYear = LocalDate.now().getYear.toString
+  )
+
   val whatYouOweDataWithDataDueIn30Days: WhatYouOweChargesList = WhatYouOweChargesList(
     dueInThirtyDaysList = financialDetailsDueIn30Days.getAllDocumentDetailsWithDueDates,
-    outstandingChargesModel = Some(outstandingChargesDueIn30Days)
+    outstandingChargesModel = Some(outstandingChargesOverdueData)
+  )
+
+  val whatYouOweDataWithDataDueInMoreThan30Days: WhatYouOweChargesList = WhatYouOweChargesList(
+    futurePayments = financialDetailsDueInMoreThan30Days.getAllDocumentDetailsWithDueDates,
+    outstandingChargesModel = Some(outstandingChargesDueInMoreThan30Days)
+  )
+
+  val whatYouOweDataWithOverdueData: WhatYouOweChargesList = WhatYouOweChargesList(
+    overduePaymentList = financialDetailsOverdueData.getAllDocumentDetailsWithDueDates,
+    outstandingChargesModel = Some(outstandingChargesOverdueData)
+  )
+
+  val whatYouOweDataFullData: WhatYouOweChargesList = WhatYouOweChargesList(
+    overduePaymentList = financialDetailsOverdueData.getAllDocumentDetailsWithDueDates,
+    outstandingChargesModel = Some(outstandingChargesOverdueData)
+  )
+
+  val whatYouOweDataFullDataWithoutOutstandingCharges: WhatYouOweChargesList = WhatYouOweChargesList(
+    overduePaymentList = financialDetailsOverdueData.getAllDocumentDetailsWithDueDates
   )
 
   val whatYouOweDataWithMixedData1: WhatYouOweChargesList = WhatYouOweChargesList(
@@ -234,16 +198,6 @@ object FinancialDetailsTestConstants {
     outstandingChargesModel = Some(OutstandingChargesModel(List()))
   )
 
-  val whatYouOweDataWithOverdueData: WhatYouOweChargesList = WhatYouOweChargesList(
-    overduePaymentList = financialDetailsOverdueData.getAllDocumentDetailsWithDueDates,
-    outstandingChargesModel = Some(outstandingChargesOverdueData)
-  )
-
-  val whatYouOweDataWithDataDueInMoreThan30Days: WhatYouOweChargesList = WhatYouOweChargesList(
-    futurePayments = financialDetailsDueInMoreThan30Days.getAllDocumentDetailsWithDueDates,
-    outstandingChargesModel = Some(outstandingChargesDueInMoreThan30Days)
-  )
-
   val whatYouOweDataWithMixedData2: WhatYouOweChargesList = WhatYouOweChargesList(
     overduePaymentList = List(financialDetailsWithMixedData2.getAllDocumentDetailsWithDueDates(1)),
     dueInThirtyDaysList = List(financialDetailsWithMixedData2.getAllDocumentDetailsWithDueDates.head),
@@ -251,25 +205,32 @@ object FinancialDetailsTestConstants {
     outstandingChargesModel = Some(OutstandingChargesModel(List()))
   )
 
-  val whatYouOwePartialChargesList: WhatYouOweChargesList = WhatYouOweChargesList(
-    overduePaymentList =
-      testFinancialDetailsModelOneItemInList(documentDescription = List(Some("ITSA- POA 1")),
-        mainType = List(Some("ITSA- POA 1")),
-        dueDate = List(Some(LocalDate.now().minusDays(10).toString)),
-        outstandingAmount = List(Some(50)),
-        taxYear = LocalDate.now().getYear.toString).getAllDocumentDetailsWithDueDates,
-    dueInThirtyDaysList =
-      testFinancialDetailsModelOneItemInList(documentDescription = List(Some("ITSA - POA 2")),
-        mainType = List(Some("ITSA - POA 2")),
-        dueDate = List(Some(LocalDate.now().plusDays(1).toString)),
-        outstandingAmount = List(Some(75)),
-        taxYear = LocalDate.now().getYear.toString).getAllDocumentDetailsWithDueDates,
-    futurePayments =
-      testFinancialDetailsModelOneItemInList(documentDescription = List(Some("ITSA- POA 1")),
-        mainType = List(Some("ITSA- POA 1")),
-        dueDate = List(Some(LocalDate.now().plusDays(45).toString)),
-        outstandingAmount = List(Some(50)),
-        taxYear = LocalDate.now().getYear.toString).getAllDocumentDetailsWithDueDates,
+  val whatYouOweWithAZeroOutstandingAmount: WhatYouOweChargesList = WhatYouOweChargesList(
+    dueInThirtyDaysList = List(financialDetailsDueIn30DaysWithAZeroOutstandingAmount.getAllDocumentDetailsWithDueDates.head),
     outstandingChargesModel = Some(outstandingChargesOverdueData)
   )
+
+  val whatYouOweOutstandingChargesOnly: WhatYouOweChargesList = WhatYouOweChargesList(outstandingChargesModel = Some(outstandingChargesOverdueData))
+
+  val whatYouOweNoChargeList: WhatYouOweChargesList = WhatYouOweChargesList(List.empty, List.empty, List.empty)
+
+  val whatYouOweFinancialDetailsEmptyBCDCharge: WhatYouOweChargesList = WhatYouOweChargesList(outstandingChargesModel = Some(outstandingChargesEmptyBCDModel))
+
+  val testInvalidFinancialDetailsJson: JsValue = Json.obj(
+    "amount" -> "invalidAmount",
+    "payMethod" -> "Payment by Card",
+    "valDate" -> "2019-05-27"
+  )
+
+  val testFinancialDetailsErrorModelParsing: FinancialDetailsErrorModel = FinancialDetailsErrorModel(
+    testErrorStatus, "Json Validation Error. Parsing FinancialDetails Data Response")
+
+  val testFinancialDetailsErrorModel: FinancialDetailsErrorModel = FinancialDetailsErrorModel(testErrorStatus, testErrorMessage)
+
+
+  val testFinancialDetailsNotFoundErrorModel: FinancialDetailsErrorModel = FinancialDetailsErrorModel(testErrorNotFoundStatus, testErrorMessage)
+
+
+
+
 }

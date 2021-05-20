@@ -54,7 +54,7 @@ class ChargeSummaryControllerSpec extends MockAuthenticationPredicate
     if (featureSwitch) enable(NewFinancialDetailsApi)
     else disable(NewFinancialDetailsApi)
 
-    val controller = new ChargeSummaryController(
+    val controller: ChargeSummaryController = new ChargeSummaryController(
       MockAuthenticationPredicate,
       app.injector.instanceOf[SessionTimeoutPredicate],
       app.injector.instanceOf[NinoPredicate],

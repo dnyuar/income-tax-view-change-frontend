@@ -16,9 +16,11 @@
 
 package audit.models
 
+import java.time.LocalDate
+
 import assets.BaseTestConstants._
 import auth.MtdItUser
-import models.financialDetails.{Charge, SubItem}
+import models.financialDetails.{DocumentDetail, DocumentDetailWithDueDate}
 import models.incomeSourceDetails.IncomeSourceDetailsModel
 import org.scalatest.{MustMatchers, WordSpecLike}
 import play.api.Logger
@@ -29,33 +31,31 @@ class ChargeSummaryAuditSpec extends WordSpecLike with MustMatchers {
 
   val transactionName: String = "charge-summary"
   val auditType: String = "ChargeSummary"
-  val charge: Charge = Charge(
+
+  val docDetail: DocumentDetail = DocumentDetail(
     taxYear = taxYear,
     transactionId = "1040000124",
-    transactionDate = Some("2019-05-16"),
-    `type` = Some("POA1"),
-    totalAmount = Some(43.21),
+    documentDescription = Some("ITSA- POA 1"),
     originalAmount = Some(10.34),
-    outstandingAmount = Some(0),
-    clearedAmount = Some(10.34),
-    chargeType = Some("POA1"),
-    mainType = Some("SA Payment on Account 1"),
-    items = Some(Seq(SubItem(subItemId = Some("003"), amount = Some(110), clearingDate = Some("2019-05-17"), clearingReason = Some("03"),
-      outgoingPaymentMethod = Some("C"), paymentReference = Some("C"), paymentAmount = Some(5000), dueDate = Some("2019-05-19"),
-      paymentMethod = Some("C"), paymentId = Some("081203010026-000003"))
-    )))
+    outstandingAmount = Some(0)
+    )
 
-  val getChargeType: String = charge.mainType match {
-    case Some("SA Payment on Account 1") => "Payment on account 1 of 2"
-    case Some("SA Payment on Account 2") => "Payment on account 2 of 2"
-    case Some("SA Balancing Charge") => "Remaining balance"
+  val docDateDetail: DocumentDetailWithDueDate = DocumentDetailWithDueDate(
+    documentDetail = docDetail,
+    dueDate = Some(LocalDate.now())
+  )
+
+  val getChargeType: String = docDetail.documentDescription match {
+    case Some("ITSA- POA 1") => "Payment on account 1 of 2"
+    case Some("ITSA - POA 2") => "Payment on account 2 of 2"
+    case Some("ITSA- Bal Charge") => "Remaining balance"
     case error =>
       Logger.error(s"[Charge][getChargeTypeKey] Missing or non-matching charge type: $error found")
       "unknownCharge"
   }
 
   def chargeSummaryAuditFull(userType: Option[String] = Some("Agent"),
-                             charge: Charge,
+                             docDateDetails: DocumentDetailWithDueDate,
                              agentReferenceNumber: Option[String] = Some("agentReferenceNumber")): ChargeSummaryAudit = ChargeSummaryAudit(
     mtdItUser = MtdItUser(
       mtditid = "mtditid",
@@ -67,7 +67,8 @@ class ChargeSummaryAuditSpec extends WordSpecLike with MustMatchers {
       userType = userType,
       arn = agentReferenceNumber
     ),
-    charge = charge
+    docDateDetail = docDateDetail,
+    agentReferenceNumber = Some("agentReferenceNumber")
   )
 
   val chargeSummaryAuditMin: ChargeSummaryAudit = ChargeSummaryAudit(
@@ -75,27 +76,28 @@ class ChargeSummaryAuditSpec extends WordSpecLike with MustMatchers {
       mtditid = "mtditid",
       nino = "nino",
       userName = None,
-      incomeSources = IncomeSourceDetailsModel("mtditid", None, Nil, None),
+      incomeSources = IncomeSourceDetailsModel("mtditid", None, List.empty, None),
       saUtr = None,
       credId = None,
       userType = None,
       arn = None
     ),
-    charge = charge
+    docDateDetail = docDateDetail,
+    agentReferenceNumber = None
   )
 
   "ChargeSummaryAudit(mtdItUser, charge, agentReferenceNumber)" should {
 
     s"have the correct transaction name of '$transactionName'" in {
-      chargeSummaryAuditFull(
-        charge = charge,
+      chargeSummaryAuditFull(None,
+        docDateDetail,
         agentReferenceNumber = Some("arn")
       ).transactionName mustBe transactionName
     }
 
     s"have the correct audit event type of '$auditType'" in {
-      chargeSummaryAuditFull(
-        charge = charge,
+      chargeSummaryAuditFull(None,
+        docDateDetail,
         agentReferenceNumber = Some("arn")
       ).auditType mustBe auditType
     }
@@ -105,7 +107,7 @@ class ChargeSummaryAuditSpec extends WordSpecLike with MustMatchers {
         "there are charge details" in {
           chargeSummaryAuditFull(
             userType = Some("Agent"),
-            charge = charge,
+            docDateDetail,
             agentReferenceNumber = Some("agentReferenceNumber")
           ).detail mustBe Json.obj(
             "agentReferenceNumber" -> "agentReferenceNumber",
@@ -117,10 +119,9 @@ class ChargeSummaryAuditSpec extends WordSpecLike with MustMatchers {
             "agentReferenceNumber" -> "agentReferenceNumber",
             "charge" -> Json.obj(
               "chargeType" -> getChargeType,
-              "dueDate" -> charge.due,
-              "paymentAmount" -> charge.originalAmount,
-              "paidToDate" -> charge.clearedAmount,
-              "remainingToPay" -> charge.remainingToPay
+              "dueDate" -> docDateDetail.dueDate,
+              "paymentAmount" -> docDetail.originalAmount,
+              "remainingToPay" -> docDetail.remainingToPay
             )
           )
         }
@@ -131,10 +132,9 @@ class ChargeSummaryAuditSpec extends WordSpecLike with MustMatchers {
             "mtditid" -> "mtditid",
             "charge" -> Json.obj(
               "chargeType" -> getChargeType,
-              "dueDate" -> charge.due,
-              "paymentAmount" -> charge.originalAmount,
-              "paidToDate" -> charge.clearedAmount,
-              "remainingToPay" -> charge.remainingToPay
+              "dueDate" -> docDateDetail.dueDate,
+              "paymentAmount" -> docDetail.originalAmount,
+              "remainingToPay" -> docDetail.remainingToPay
             )
           )
         }

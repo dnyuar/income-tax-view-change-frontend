@@ -47,7 +47,7 @@ class ChargeSummaryController @Inject()(chargeSummary: ChargeSummary,
                                          mcc: MessagesControllerComponents,
                                          dateFormatter: ImplicitDateFormatterImpl,
                                          implicit val ec: ExecutionContext,
-                                         val itvcErrorHandler: ItvcErrorHandler)
+                                         implicit val itvcErrorHandler: ItvcErrorHandler)
   extends ClientConfirmedController with ImplicitDateFormatter with FeatureSwitching with I18nSupport {
 
   private def view(documentDetailWithDueDate: DocumentDetailWithDueDate, backLocation: Option[String], taxYear: Int)(implicit request: Request[_]): Html = {
@@ -59,23 +59,24 @@ class ChargeSummaryController @Inject()(chargeSummary: ChargeSummary,
     )
   }
 
-  def showChargeSummary(taxYear: Int, chargeId: String): Action[AnyContent] = {
+  def showChargeSummary(taxYear: Int, docId: String): Action[AnyContent] = {
     Authenticated.async { implicit request =>
       implicit user =>
         if (isEnabled(AgentViewer)) {
           if (isEnabled(NewFinancialDetailsApi)) {
             financialDetailsService.getFinancialDetails(taxYear, getClientNino).map {
-              case success: FinancialDetailsModel if success.documentDetails.exists(_.transactionId == chargeId) =>
+              case success: FinancialDetailsModel if success.docDetails.exists(_.transactionId == docId) =>
                 val backLocation = request.session.get(SessionKeys.chargeSummaryBackPage)
-                val charge: DocumentDetail = success.findDocumentDetailByIdWithDueDate(chargeId).get
+                val docDateDetail: DocumentDetailWithDueDate = success.findDocumentDetailByIdWithDueDate(docId).get
                 getMtdItUserWithIncomeSources(incomeSourceDetailsService) map { mtdItUser =>
                   auditingService.extendedAudit(ChargeSummaryAudit(
                     mtdItUser = mtdItUser,
-                    charge = charge
+                    docDateDetail = docDateDetail,
+                    agentReferenceNumber = user.agentReferenceNumber
                   ))
 
                 }
-                Ok(view(charge, backLocation, taxYear))
+                Ok(view(docDateDetail, backLocation, taxYear))
               case _: FinancialDetailsModel =>
                 Logger.warn(s"[ChargeSummaryController][showChargeSummary] Transaction id not found for tax year $taxYear")
                 Redirect(controllers.agent.routes.HomeController.show())

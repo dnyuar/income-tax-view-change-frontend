@@ -16,6 +16,8 @@
 
 package controllers.agent
 
+import java.time.LocalDate
+
 import assets.BaseIntegrationTestConstants._
 import assets.IncomeSourceIntegrationTestConstants.{multipleBusinessesAndPropertyResponse, propertyOnlyResponse}
 import audit.models.ChargeSummaryAudit
@@ -23,13 +25,12 @@ import auth.MtdItUser
 import config.featureswitch.{AgentViewer, FeatureSwitching, NewFinancialDetailsApi}
 import controllers.agent.utils.SessionKeys
 import helpers.agent.ComponentSpecBase
+import helpers.servicemocks.DocumentDetailsStub.docDateDetail
 import helpers.servicemocks.{AuditStub, IncomeTaxViewChangeStub}
 import models.financialDetails.{DocumentDetail, FinancialDetail, FinancialDetailsModel, SubItem}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-
-import java.time.LocalDate
 
 class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
@@ -67,19 +68,19 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
       )(
         status = OK,
         response = Json.toJson(FinancialDetailsModel(
-          documentDetails = List(
+          docDetails = List(
             DocumentDetail(
               taxYear = getCurrentTaxYearEnd.getYear.toString,
               transactionId = "testId",
               documentDescription = Some("ITSA- POA 1"),
-              outstandingAmount = Some(500.00),
-              originalAmount = Some(1000.00)
+              outstandingAmount = Some(1.2),
+              originalAmount = Some(10.34)
             )
           ),
           financialDetails = List(
             FinancialDetail(
               taxYear = getCurrentTaxYearEnd.getYear.toString,
-              mainType = Some("SA Payment on Account 1"),
+              mainType = Some("ITSA- POA 1"),
               items = Some(Seq(SubItem(Some(LocalDate.now.toString))))
             )
           )
@@ -95,10 +96,8 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
           testMtditid, testNino, None,
           multipleBusinessesAndPropertyResponse, Some("1234567890"), None, Some("Agent"), Some(testArn)
         )(FakeRequest()),
-        Charge("2022", "testId", Some("2022-0P4-05"), None, Some(1000), Some(1000), Some(500), Some(500), Some("POA1"),
-          Some("SA Payment on Account 1"), Some(List(SubItem(None, None, None, None, None, None, None, Some(LocalDate.now.toString),
-            None, None))))
-
+        docDateDetail(LocalDate.now().toString, "ITSA- POA 1"),
+        agentReferenceNumber = Some("1")
       ).detail)
 
       result should have(

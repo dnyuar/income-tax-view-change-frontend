@@ -16,33 +16,39 @@
 
 package audit.models
 
-import audit.Utilities._
 import auth.MtdItUser
-import models.financialDetails.Charge
+import models.financialDetails.DocumentDetailWithDueDate
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsValue, Json}
 import utils.Utilities._
 
 
 case class ChargeSummaryAudit(mtdItUser: MtdItUser[_],
-                              charge: Charge) extends ExtendedAuditModel {
+                              docDateDetail: DocumentDetailWithDueDate,
+                              agentReferenceNumber: Option[String]) extends ExtendedAuditModel {
 
-  val getChargeType: String = charge.mainType match {
-    case Some("SA Payment on Account 1") => "Payment on account 1 of 2"
-    case Some("SA Payment on Account 2") => "Payment on account 2 of 2"
-    case Some("SA Balancing Charge") => "Remaining balance"
-    case error =>
+  private val userType: JsObject = mtdItUser.userType match {
+    case Some("Agent") => Json.obj("userType" -> "Agent")
+    case Some(_) => Json.obj("userType" -> "Individual")
+    case None => Json.obj()
+  }
+
+  val getChargeType: String = docDateDetail.documentDetail.documentDescription match {
+    case Some("ITSA- POA 1") => "Payment on account 1 of 2"
+    case Some("ITSA - POA 2") => "Payment on account 2 of 2"
+    case Some("ITSA- Bal Charge") => "Remaining balance"
+    case error => {
       Logger.error(s"[Charge][getChargeTypeKey] Missing or non-matching charge type: $error found")
       "unknownCharge"
+    }
   }
 
   private val chargeDetails: JsObject = Json.obj(
     "chargeType" -> getChargeType,
-    "remainingToPay" -> charge.remainingToPay
+    "remainingToPay" -> docDateDetail.documentDetail.remainingToPay
   ) ++
-    ("dueDate", charge.due) ++
-    ("paymentAmount", charge.originalAmount) ++
-    ("paidToDate", charge.clearedAmount)
+    ("dueDate", docDateDetail.dueDate) ++
+    ("paymentAmount", docDateDetail.documentDetail.originalAmount)
 
 
   override val transactionName: String = "charge-summary"
@@ -50,7 +56,7 @@ case class ChargeSummaryAudit(mtdItUser: MtdItUser[_],
     Json.obj("nationalInsuranceNumber" -> mtdItUser.nino) ++
       ("agentReferenceNumber", mtdItUser.arn) ++
       ("saUtr", mtdItUser.saUtr) ++
-      userType(mtdItUser.userType) ++
+      userType ++
       ("credId", mtdItUser.credId) ++
       Json.obj("mtditid" -> mtdItUser.mtditid) ++
       Json.obj("charge" -> chargeDetails)

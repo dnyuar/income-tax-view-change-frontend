@@ -19,7 +19,7 @@ package audit
 import auth.MtdItUser
 import play.api.libs.json.{JsObject, Json}
 import utils.Utilities.JsonUtil
-import _root_.models.financialDetails.Charge
+import _root_.models.financialDetails.DocumentDetail
 
 
 object Utilities {
@@ -27,7 +27,6 @@ object Utilities {
   def userAuditDetails(user: MtdItUser[_]): JsObject = Json.obj(
     "nationalInsuranceNumber" -> user.nino,
     "mtditid" -> user.mtditid
-
   ) ++
     ("agentReferenceNumber", user.arn) ++
     ("saUtr", user.saUtr) ++
@@ -40,11 +39,10 @@ object Utilities {
     case None => Json.obj()
   }
 
-  def getChargeType(charge: Charge): Option[String] = charge.mainType map {
-    case "SA Payment on Account 1" => "Payment on account 1 of 2"
-    case "SA Payment on Account 2" => "Payment on account 2 of 2"
-    case "SA Balancing Charge" => "Remaining balance"
+  def getChargeType(docDetail: DocumentDetail): Option[String] = docDetail.documentDescription map {
+    case "ITSA- POA 1" => "Payment on account 1 of 2"
+    case "ITSA - POA 2" => "Payment on account 2 of 2"
+    case "ITSA- Bal Charge" => "Remaining balance"
     case other => other
   }
-
 }

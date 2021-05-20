@@ -16,8 +16,7 @@
 
 package views.agent
 
-import assets.CalcBreakdownTestConstants
-import assets.CalcBreakdownTestConstants.calculationDataSuccessModel
+import assets.CalcBreakdownTestConstants._
 import assets.MessagesLookUp.TaxCalcBreakdown
 import enums.Crystallised
 import models.calculation.TaxDeductedAtSource.{Message, Messages}
@@ -56,7 +55,7 @@ class TaxCalcBreakdownViewSpec extends ViewSpec {
       val taxYear = 2017
 
       lazy val view = taxCalcBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.scottishTaxBandModelJustPPP,
+        scottishTaxBandModelJustPPP,
         Crystallised), taxYear, backUrl)
 
       "have a Pay, pensions and profit table" which {
@@ -108,7 +107,7 @@ class TaxCalcBreakdownViewSpec extends ViewSpec {
       val taxYear = 2017
 
       lazy val view = taxCalcBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.scottishTaxBandModelJustLs,
+        scottishTaxBandModelJustLs,
         Crystallised), taxYear, backUrl)
 
       "have a Lump sums table" which {
@@ -161,7 +160,7 @@ class TaxCalcBreakdownViewSpec extends ViewSpec {
       val taxYear = 2017
 
       lazy val view = taxCalcBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.scottishTaxBandModelJustGols,
+        scottishTaxBandModelJustGols,
         Crystallised), taxYear, backUrl)
 
       "have a Pay, pensions and profit table" which {
@@ -216,7 +215,7 @@ class TaxCalcBreakdownViewSpec extends ViewSpec {
       val taxYear = 2017
 
       lazy val view = taxCalcBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.calculationBillTaxableIncomeZeroModel,
+        calculationBillTaxableIncomeZeroModel,
         Crystallised), taxYear, backUrl)
 
       "have the correct title" in new Setup(view) {
@@ -239,15 +238,15 @@ class TaxCalcBreakdownViewSpec extends ViewSpec {
       val taxYear = 2018
 
       lazy val view = taxCalcBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.testCalcModelCrystallised,
+        testCalcModelCrystallised,
         Crystallised), taxYear, backUrl)
 
       lazy val viewNic2 = taxCalcBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.testCalcModelNic2,
+        testCalcModelNic2,
         Crystallised), taxYear, backUrl)
 
       lazy val viewAllIncome = taxCalcBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.calculationAllIncomeSources,
+        calculationAllIncomeSources,
         Crystallised), taxYear, backUrl)
 
       lazy val zeroIncome = taxCalcBreakdown(CalcDisplayModel("", 1,

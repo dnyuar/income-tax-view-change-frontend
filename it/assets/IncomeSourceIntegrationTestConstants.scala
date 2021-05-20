@@ -94,11 +94,11 @@ object IncomeSourceIntegrationTestConstants {
 
   val errorResponse: IncomeSourceDetailsError = IncomeSourceDetailsError(500, "ISE")
 
-  val testEmptyFinancialDetailsModelJson: JsValue = Json.obj("documentDetails" -> Json.arr(), "financialDetails" -> Json.arr())
+  val testEmptyFinancialDetailsModelJson: JsValue = Json.obj("docDetails" -> Json.arr(), "financialDetails" -> Json.arr())
 
   def testValidFinancialDetailsModelJsonSingleCharge(originalAmount: BigDecimal, outstandingAmount: BigDecimal,
                                                      taxYear: String = "2018", dueDate: String = "2018-02-14"): JsValue = Json.obj(
-    "documentDetails" -> Json.arr(
+    "docDetails" -> Json.arr(
       Json.obj(
         "taxYear" -> taxYear,
         "transactionId" -> "1040000123",
@@ -110,7 +110,7 @@ object IncomeSourceIntegrationTestConstants {
     "financialDetails" -> Json.arr(
       Json.obj(
         "taxYear" -> taxYear,
-        "mainType" -> "SA Payment on Account 1",
+        "mainType" -> "ITSA- POA 1",
         "items" -> Json.arr(
           Json.obj(
             "dueDate" -> dueDate,
@@ -122,7 +122,7 @@ object IncomeSourceIntegrationTestConstants {
 
   def testValidFinancialDetailsModelJson(originalAmount: BigDecimal, outstandingAmount: BigDecimal,
                                          taxYear: String = "2018", dueDate: String = "2018-02-14"): JsValue = Json.obj(
-    "documentDetails" -> Json.arr(
+    "docDetails" -> Json.arr(
       Json.obj(
         "taxYear" -> taxYear,
         "transactionId" -> "1040000123",
@@ -148,17 +148,17 @@ object IncomeSourceIntegrationTestConstants {
     "financialDetails" -> Json.arr(
       Json.obj(
         "taxYear" -> taxYear,
-        "mainType" -> "SA Balancing Charge",
+        "mainType" -> "ITSA- Bal Charge",
         "items" -> Json.arr(Json.obj("dueDate" -> dueDate))
       ),
       Json.obj(
         "taxYear" -> taxYear,
-        "mainType" -> "SA Payment on Account 1",
+        "mainType" -> "ITSA- POA 1",
         "items" -> Json.arr(Json.obj("dueDate" -> dueDate))
       ),
       Json.obj(
         "taxYear" -> taxYear,
-        "mainType" -> "SA Payment on Account 2",
+        "mainType" -> "ITSA - POA 2",
         "items" -> Json.arr(Json.obj("dueDate" -> dueDate))
       )
     )
@@ -176,7 +176,7 @@ object IncomeSourceIntegrationTestConstants {
   )
 
   def financialDetailJson(taxYear: String = "2018",
-                          mainType: String = "SA Balancing Charge",
+                          mainType: String = "ITSA- Bal Charge",
                           dueDate: String = "2018-02-14"): JsValue = Json.obj(
     "taxYear" -> taxYear,
     "mainType" -> mainType,

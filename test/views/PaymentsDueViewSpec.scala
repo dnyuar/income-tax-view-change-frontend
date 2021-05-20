@@ -151,9 +151,9 @@ class PaymentsDueViewSpec extends TestSupport with FeatureSwitching with Implici
         val testTaxYearFrom = testTaxYear - 1
         pageDocument.getElementById(s"payments-due-$testTaxYearTo").text shouldBe paymentDueMessages.taxYearPeriod(testTaxYearFrom.toString, testTaxYearTo.toString)
 
-        pageDocument.getElementById(s"payments-due-outstanding-$testTaxYearTo").text shouldBe unpaidFinancialDetails.head.documentDetails.head.outstandingAmount.get.toCurrencyString
+        pageDocument.getElementById(s"payments-due-outstanding-$testTaxYearTo").text shouldBe unpaidFinancialDetails.head.docDetails.head.outstandingAmount.get.toCurrencyString
 
-        val expectedDueDate: String = unpaidFinancialDetails.head.findDocumentDetailByIdWithDueDate(unpaidFinancialDetails.head.documentDetails.head.transactionId).get.dueDate.get.toLongDate
+        val expectedDueDate: String = unpaidFinancialDetails.head.findDocumentDetailByIdWithDueDate(unpaidFinancialDetails.head.docDetails.head.transactionId).get.dueDate.get.toLongDate
 
         pageDocument.getElementById(s"payments-due-on-$testTaxYearTo").text shouldBe
           s"${paymentDueMessages.due} $expectedDueDate"
@@ -179,7 +179,7 @@ class PaymentsDueViewSpec extends TestSupport with FeatureSwitching with Implici
         pageDocument.select(s"#payment-link-$testTaxYearTo a").attr("aria-label") shouldBe paymentDueMessages.payNowAria(testTaxYearFrom.toString, testTaxYearTo.toString)
 
         pageDocument.select(s"#payment-link-$testTaxYearTo a")
-          .attr("href") shouldBe controllers.routes.PaymentController.paymentHandoff(unpaidFinancialDetails.head.documentDetails.head.outstandingAmount.get.toPence).url
+          .attr("href") shouldBe controllers.routes.PaymentController.paymentHandoff(unpaidFinancialDetails.head.docDetails.head.outstandingAmount.get.toPence).url
       }
 
     }

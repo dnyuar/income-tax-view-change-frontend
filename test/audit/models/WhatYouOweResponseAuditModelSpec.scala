@@ -17,8 +17,9 @@
 package audit.models
 
 import java.time.LocalDate
-import assets.ChargeListTestConstants._
-import assets.BaseTestConstants.{testArn, testCredId, testMtditid, testNino, testSaUtr, testUserType}
+
+import assets.BaseTestConstants.{testArn, testCredId, testMtditid, testNino, testSaUtr}
+import assets.FinancialDetailsTestConstants.whatYouOwePartialChargesList
 import auth.MtdItUser
 import models.incomeSourceDetails.IncomeSourceDetailsModel
 import play.api.libs.json.Json
@@ -35,7 +36,7 @@ class WhatYouOweResponseAuditModelSpec extends TestSupport {
   val dueDateIsSoon = LocalDate.now().plusDays(1).toString
   val dueDateInPast = LocalDate.now().minusDays(10).toString
 
-  val outStandingCharges = LocalDate.now().minusMonths(13).toString
+  val outStandingCharges = LocalDate.now().minusDays(30).toString
 
   def testWhatYouOweResponseAuditModel(userType: Option[String] = Some("Agent")): WhatYouOweResponseAuditModel = WhatYouOweResponseAuditModel(
     user = MtdItUser(
@@ -47,7 +48,7 @@ class WhatYouOweResponseAuditModelSpec extends TestSupport {
       credId = Some(testCredId),
       userType = userType,
       arn = if (userType.contains("Agent")) Some(testArn) else None
-    ), whatYouOwePartialData
+    ), whatYouOwePartialChargesList
   )
 
   "The WhatYouOweResponseAuditModel" should {

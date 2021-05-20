@@ -17,7 +17,7 @@
 package views
 
 import assets.MessagesLookUp.{DeductionBreakdown, IncomeBreakdown}
-import assets.CalcBreakdownTestConstants
+import assets.CalcBreakdownTestConstants._
 import enums.Estimate
 import models.calculation.CalcDisplayModel
 import org.jsoup.nodes.Element
@@ -42,7 +42,7 @@ class DeductionBreakdownViewSpec extends ViewSpec {
       val taxYear = 2017
 
       lazy val view = deductionBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.calculationNoBillModel,
+        calculationNoBillModel,
         Estimate), taxYear, backUrl)
 
       "have the correct title" in new Setup(view) {
@@ -77,7 +77,7 @@ class DeductionBreakdownViewSpec extends ViewSpec {
       val taxYear = 2018
 
       lazy val view = deductionBreakdown(CalcDisplayModel("", 1,
-        CalcBreakdownTestConstants.calculationAllDeductionSources,
+        calculationAllDeductionSources,
         Estimate), taxYear, backUrl)
 
       "have the correct title" in new Setup(view) {

@@ -18,17 +18,17 @@ package audit.models
 
 import auth.MtdItUser
 import models.calculation.Calculation
-import models.financialDetails.Charge
 import models.reportDeadlines.{ObligationsModel, ReportDeadlineModelWithIncomeType}
 import play.api.Logger
 import play.api.libs.json.{JsObject, JsValue, Json}
 import utils.Utilities._
 import audit.Utilities._
+import models.financialDetails.{DocumentDetailWithDueDate, FinancialDetail}
 
 case class TaxYearOverviewResponseAuditModel(mtdItUser: MtdItUser[_],
                                              agentReferenceNumber: Option[String],
                                              calculation: Calculation,
-                                             payments: List[Charge],
+                                             payments: List[DocumentDetailWithDueDate],
                                              updates: ObligationsModel) extends ExtendedAuditModel {
 
   override val transactionName: String = "tax-year-overview-response"
@@ -41,20 +41,20 @@ case class TaxYearOverviewResponseAuditModel(mtdItUser: MtdItUser[_],
     ("taxDue", calculation.totalIncomeTaxAndNicsDue)
 
   private def getChargeType(chargeType: Option[String]): String = chargeType match {
-    case Some("SA Payment on Account 1") => "Payment on account 1 of 2"
-    case Some("SA Payment on Account 2") => "Payment on account 2 of 2"
-    case Some("SA Balancing Charge") => "Remaining balance"
+    case Some("ITSA- POA 1") => "Payment on account 1 of 2"
+    case Some("ITSA - POA 2") => "Payment on account 2 of 2"
+    case Some("ITSA- Bal Charge") => "Remaining balance"
     case error => {
       Logger.error(s"[TaxYearOverview][getChargeType] Missing or non-matching charge type: $error found")
       "unknownCharge"
     }
   }
 
-  private def paymentsJson(charge: Charge): JsObject = {
-    Json.obj("paymentType" -> getChargeType(charge.mainType),
-      "status" -> charge.getChargePaidStatus) ++
-      ("amount", charge.originalAmount) ++
-      ("dueDate", charge.due)
+  private def paymentsJson(docDateDetail: DocumentDetailWithDueDate): JsObject = {
+    Json.obj("paymentType" -> getChargeType(docDateDetail.documentDetail.documentDescription),
+      "status" -> docDateDetail.documentDetail.getChargePaidStatus) ++
+      ("amount", docDateDetail.documentDetail.originalAmount) ++
+      ("dueDate", docDateDetail.dueDate)
   }
 
   private val paymentsDetails: Seq[JsObject] = payments.map(paymentsJson)

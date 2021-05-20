@@ -18,7 +18,7 @@ package audit.models
 
 import audit.Utilities._
 import auth.MtdItUser
-import models.financialDetails.{Charge, WhatYouOweChargesList}
+import models.financialDetails.{DocumentDetailWithDueDate, WhatYouOweChargesList}
 import models.outstandingCharges.OutstandingChargesModel
 import play.api.libs.json._
 import utils.Utilities.JsonUtil
@@ -29,20 +29,20 @@ case class WhatYouOweResponseAuditModel(user: MtdItUser[_],
   override val transactionName: String = "what-you-owe-response"
   override val auditType: String = "WhatYouOweResponse"
 
-  private val chargeListJson: List[JsObject] = (
+  private val docDetailsListJson: List[JsObject] = (
     chargesList.overduePaymentList ++
       chargesList.dueInThirtyDaysList ++
-      chargesList.futurePayments).map(chargeDetails) ++
+      chargesList.futurePayments).map(documentDetails) ++
     chargesList.outstandingChargesModel.map(outstandingChargeDetails)
 
   override val detail: JsValue = userAuditDetails(user) ++
-    Json.obj("charges" -> chargeListJson)
+    Json.obj("charges" -> docDetailsListJson)
 
-  private def chargeDetails(charge: Charge): JsObject = Json.obj(
-    "outstandingAmount" -> charge.remainingToPay
+  private def documentDetails(docDateDetail: DocumentDetailWithDueDate): JsObject = Json.obj(
+    "outstandingAmount" -> docDateDetail.documentDetail.remainingToPay
   ) ++
-    ("chargeType", getChargeType(charge)) ++
-    ("dueDate", charge.due)
+    ("chargeType", getChargeType(docDateDetail.documentDetail)) ++
+    ("dueDate", docDateDetail.dueDate)
 
   private def outstandingChargeDetails(outstandingCharge: OutstandingChargesModel) = Json.obj(
     "chargeType" -> "Remaining balance"

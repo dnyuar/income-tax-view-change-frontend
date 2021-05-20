@@ -22,9 +22,8 @@ import audit.models.ChargeSummaryAudit
 import auth.MtdItUser
 import config.featureswitch.NewFinancialDetailsApi
 import helpers.ComponentSpecBase
+import helpers.servicemocks.DocumentDetailsStub.docDateDetail
 import helpers.servicemocks.{AuditStub, IncomeTaxViewChangeStub}
-import models.financialDetails.{Charge, SubItem}
-import helpers.servicemocks.IncomeTaxViewChangeStub
 import play.api.http.Status._
 import play.api.test.FakeRequest
 
@@ -55,10 +54,10 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase {
 
     "load the page" in {
       Given("I wiremock stub a successful Income Source Details response with property only")
-      IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, propertyOnlyResponse)
+      IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, multipleBusinessesAndPropertyResponse)
 
       And("I wiremock stub a single financial transaction response")
-      IncomeTaxViewChangeStub.stubGetFinancialDetailsResponse(testNino)(OK, testValidFinancialDetailsModelJson(2000.00, 2000.00))
+      IncomeTaxViewChangeStub.stubGetFinancialDetailsResponse(testNino)(OK, testValidFinancialDetailsModelJson(10.34, 1.2))
 
       Given("the financial api feature switch is on")
       enable(NewFinancialDetailsApi)
@@ -70,12 +69,11 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase {
       AuditStub.verifyAuditContainsDetail(ChargeSummaryAudit(
         MtdItUser(
           testMtditid, testNino, None,
-          multipleBusinessesAndPropertyResponse, Some("1234567890"), Some("12345-credId"), Some("Individual"), None
+          multipleBusinessesAndPropertyResponse, Some("1234567890"),
+          Some("12345-credId"), Some("Individual"), None
         )(FakeRequest()),
-        Charge("2018", "1040000123", Some("2019-05-15"), Some("Balancing Charge Debit"), Some(3400), Some(2000),
-          Some(2000), None, Some("Balancing Charge debit"), Some("SA Balancing Charge"), Some(List(SubItem(Some("001"),
-            Some(100), Some("2019-05-15"), Some("01"), Some("A"), None, Some(2000),
-            Some("2018-02-14"), Some("A"), Some("081203010024-000001")))))
+        docDateDetail("2018-02-14", "ITSA- Bal Charge"),
+        None
       ).detail)
 
       Then("the result should have a HTTP status of OK (200) and load the correct page")

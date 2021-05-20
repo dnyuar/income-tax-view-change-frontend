@@ -16,23 +16,23 @@
 
 package controllers
 
-import audit.AuditingService
-import audit.models.ChargeSummaryAudit
 import config.featureswitch.{FeatureSwitching, NewFinancialDetailsApi, Payment}
 import config.{FrontendAppConfig, ItvcErrorHandler}
 import controllers.predicates.{AuthenticationPredicate, IncomeSourceDetailsPredicate, NinoPredicate, SessionTimeoutPredicate}
 import forms.utils.SessionKeys
 import implicits.{ImplicitDateFormatter, ImplicitDateFormatterImpl}
-import models.financialDetails.{DocumentDetail, FinancialDetailsModel}
+import models.financialDetails.{DocumentDetail, DocumentDetailWithDueDate, FinancialDetailsModel}
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import services.FinancialDetailsService
 import uk.gov.hmrc.play.language.LanguageUtils
 import views.html.chargeSummary
-
 import java.time.LocalDate
+import audit.AuditingService
+import audit.models.ChargeSummaryAudit
 import javax.inject.Inject
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class ChargeSummaryController @Inject()(authenticate: AuthenticationPredicate,
@@ -41,11 +41,12 @@ class ChargeSummaryController @Inject()(authenticate: AuthenticationPredicate,
                                         retrieveIncomeSources: IncomeSourceDetailsPredicate,
                                         financialDetailsService: FinancialDetailsService,
                                         auditingService: AuditingService,
-                                        itvcErrorHandler: ItvcErrorHandler)(implicit val appConfig: FrontendAppConfig,
-                                                                            val languageUtils: LanguageUtils,
-                                                                            mcc: MessagesControllerComponents,
-                                                                            val executionContext: ExecutionContext,
-                                                                            dateFormatter: ImplicitDateFormatterImpl)
+                                        itvcErrorHandler: ItvcErrorHandler)
+                                       (implicit val appConfig: FrontendAppConfig,
+                                        val languageUtils: LanguageUtils,
+                                        mcc: MessagesControllerComponents,
+                                        val executionContext: ExecutionContext,
+                                        dateFormatter: ImplicitDateFormatterImpl)
   extends BaseController with ImplicitDateFormatter with FeatureSwitching with I18nSupport {
 
   private def view(documentDetail: DocumentDetail, dueDate: Option[LocalDate], backLocation: Option[String], taxYear: Int)(implicit request: Request[_]) = {
@@ -57,16 +58,17 @@ class ChargeSummaryController @Inject()(authenticate: AuthenticationPredicate,
       implicit user =>
         if (isEnabled(NewFinancialDetailsApi)) {
           financialDetailsService.getFinancialDetails(taxYear, user.nino).map {
-            case success: FinancialDetailsModel if success.documentDetails.exists(_.transactionId == id) =>
+            case success: FinancialDetailsModel if success.docDetails.exists(_.transactionId == id) =>
               val backLocation = user.session.get(SessionKeys.chargeSummaryBackPage)
-              val documentDetail = success.documentDetails.find(_.transactionId == id).get
+              val documentDetailWithDueDate: DocumentDetailWithDueDate = success.findDocumentDetailByIdWithDueDate(id).get
               auditingService.extendedAudit(ChargeSummaryAudit(
                 mtdItUser = user,
-                charge = documentDetail
+                docDateDetail = documentDetailWithDueDate,
+                None
               ))
               Ok(view(
-                documentDetail = documentDetail,
-                dueDate = success.getDueDateFor(documentDetail),
+                documentDetail = documentDetailWithDueDate.documentDetail,
+                dueDate = success.getDueDateFor(documentDetailWithDueDate.documentDetail),
                 backLocation = backLocation,
                 taxYear = taxYear
               ))

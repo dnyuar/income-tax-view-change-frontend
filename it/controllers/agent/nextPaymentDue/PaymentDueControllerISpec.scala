@@ -2,7 +2,6 @@
 package controllers.agent.nextPaymentDue
 
 import assets.BaseIntegrationTestConstants._
-import assets.ChargeListIntegrationTestConstants._
 import assets.IncomeSourceIntegrationTestConstants._
 import assets.OutstandingChargesIntegrationTestConstants._
 import auth.MtdItUser
@@ -19,8 +18,9 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.retrieve.Name
 import assets.PaymentDueTestConstraints.getCurrentTaxYearEnd
 import audit.models.{WhatYouOweRequestAuditModel, WhatYouOweResponseAuditModel}
-
 import java.time.LocalDate
+
+import assets.FinancialDetailIntegrationTestConstants._
 
 class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
@@ -156,7 +156,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
 
       AuditStub.verifyAuditContainsDetail(WhatYouOweRequestAuditModel(testUser).detail)
 
-      AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweMultiFinancialDetailsBCDACI).detail)
+      AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweDataWithDataDueIn30Days).detail)
 
       Then("The Payment Due what you owe page is returned to the user")
       result should have(
@@ -191,7 +191,6 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
       IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(
         OK, propertyOnlyResponseWithMigrationData(previousTaxYearEnd.toInt, Some(currentTaxYearEnd.toString)))
 
-
       IncomeTaxViewChangeStub.stubGetFinancialDetailsResponse(testNino, s"$previousTaxYearEnd-04-06", s"$currentTaxYearEnd-04-05"
       )(OK, testValidFinancialDetailsModelJson(
         2000, 2000, currentTaxYearEnd.toString, LocalDate.now().minusDays(15).toString))
@@ -203,7 +202,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
 
       AuditStub.verifyAuditContainsDetail(WhatYouOweRequestAuditModel(testUser).detail)
 
-      AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweMultiFinancialDetails).detail)
+      AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweDataFullDataWithoutOutstandingCharges).detail)
 
       Then("The Payment Due what you owe page is returned to the user")
       result should have(
@@ -242,15 +241,15 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
       )
 
       val mixedJson = Json.obj(
-        "documentDetails" -> Json.arr(
+        "docDetails" -> Json.arr(
           documentDetailJson(3400.00, 1000.00, currentTaxYearEnd.toString),
           documentDetailJson(1000.00, 100.00, currentTaxYearEnd.toString, "ITSA- POA 1"),
           documentDetailJson(1000.00, 0, currentTaxYearEnd.toString, "ITSA - POA 2")
         ),
         "financialDetails" -> Json.arr(
           financialDetailJson(currentTaxYearEnd.toString),
-          financialDetailJson(currentTaxYearEnd.toString, "SA Payment on Account 1", LocalDate.now().plusDays(1).toString),
-          financialDetailJson(currentTaxYearEnd.toString, "SA Payment on Account 2", LocalDate.now().minusDays(1).toString)
+          financialDetailJson(currentTaxYearEnd.toString, "ITSA- POA 1", LocalDate.now().plusDays(1).toString),
+          financialDetailJson(currentTaxYearEnd.toString, "ITSA - POA 2", LocalDate.now().minusDays(1).toString)
         ))
 
       IncomeTaxViewChangeStub.stubGetFinancialDetailsResponse(testNino, s"$previousTaxYearEnd-04-06", s"$currentTaxYearEnd-04-05")(
@@ -264,7 +263,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
 
       AuditStub.verifyAuditContainsDetail(WhatYouOweRequestAuditModel(testUser).detail)
 
-      AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, financialDetailsOneZeroOutstandingAmount).detail)
+      AuditStub.verifyAuditContainsDetail(WhatYouOweResponseAuditModel(testUser, whatYouOweWithAZeroOutstandingAmount).detail)
 
       Then("The Payment Due what you owe page is returned to the user")
       result should have(
@@ -496,7 +495,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
           propertyOnlyResponseWithMigrationData(previousTaxYearEnd, Some(currentTaxYearEnd.toString)))
 
         val mixedJson = Json.obj(
-          "documentDetails" -> Json.arr(
+          "docDetails" -> Json.arr(
             documentDetailJson(3400.00, 1000.00, currentTaxYearEnd.toString, "test"),
             documentDetailJson(1000.00, 0.00, currentTaxYearEnd.toString, "4444"),
             documentDetailJson(1000.00, 3000.00, currentTaxYearEnd.toString, "5555")
@@ -554,7 +553,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
           propertyOnlyResponseWithMigrationData(previousTaxYearEnd, Some(currentTaxYearEnd.toString)))
 
         val mixedJson = Json.obj(
-          "documentDetails" -> Json.arr(
+          "docDetails" -> Json.arr(
             documentDetailJson(3400.00, 1000.00, currentTaxYearEnd.toString, "test"),
             documentDetailJson(1000.00, 0.00, currentTaxYearEnd.toString, "3333"),
             documentDetailJson(1000.00, 3000.00, currentTaxYearEnd.toString, "4444")
@@ -616,7 +615,7 @@ class PaymentDueControllerISpec extends ComponentSpecBase with FeatureSwitching 
         IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK,
           propertyOnlyResponseWithMigrationData(testTaxYear - 1, Some(testTaxYear.toString)))
 
-        IncomeTaxViewChangeStub.stubGetFinancialDetailsResponse(testNino, s"${testTaxYear - 1}-04-06", s"${testTaxYear}-04-05"
+        IncomeTaxViewChangeStub.stubGetFinancialDetailsResponse(testNino, s"${testTaxYear - 1}-04-06", s"$testTaxYear-04-05"
         )(OK, testValidFinancialDetailsModelJson(
           2000, 2000, testTaxYear.toString, LocalDate.now().plusYears( 1).toString))
 

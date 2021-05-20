@@ -196,7 +196,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               )(
                 status = OK,
                 response = Json.toJson(FinancialDetailsModel(
-                  documentDetails = List(
+                  docDetails = List(
                     DocumentDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
                       transactionId = "testTransactionId",
@@ -208,7 +208,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                   financialDetails = List(
                     FinancialDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
-                      mainType = Some("SA Payment on Account 1"),
+                      mainType = Some("ITSA- POA 1"),
                       items = Some(Seq(SubItem(Some(LocalDate.now.toString))))
                     )
                   )
@@ -264,7 +264,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               )(
                 status = OK,
                 response = Json.toJson(FinancialDetailsModel(
-                  documentDetails = List(
+                  docDetails = List(
                     DocumentDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
                       transactionId = "testTransactionId",
@@ -276,7 +276,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                   financialDetails = List(
                     FinancialDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
-                      mainType = Some("SA Payment on Account 1"),
+                      mainType = Some("ITSA- POA 1"),
                       items = Some(Seq(SubItem(Some(LocalDate.now.toString))))
                     )
                   )
@@ -332,7 +332,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               )(
                 status = OK,
                 response = Json.toJson(FinancialDetailsModel(
-                  documentDetails = List(
+                  docDetails = List(
                     DocumentDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
                       transactionId = "testTransactionId",
@@ -344,7 +344,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                   financialDetails = List(
                     FinancialDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
-                      mainType = Some("SA Payment on Account 1"),
+                      mainType = Some("ITSA- POA 1"),
                       items = Some(Seq(SubItem(Some(LocalDate.now.minusDays(1).toString))))
                     )
                   )
@@ -401,7 +401,7 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
               )(
                 status = OK,
                 response = Json.toJson(FinancialDetailsModel(
-                  documentDetails = List(
+                  docDetails = List(
                     DocumentDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
                       transactionId = "testTransactionId",
@@ -420,12 +420,12 @@ class HomeControllerISpec extends ComponentSpecBase with FeatureSwitching {
                   financialDetails = List(
                     FinancialDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
-                      mainType = Some("SA Payment on Account 1"),
+                      mainType = Some("ITSA- POA 1"),
                       items = Some(Seq(SubItem(Some(LocalDate.now.minusDays(1).toString))))
                     ),
                     FinancialDetail(
                       taxYear = getCurrentTaxYearEnd.getYear.toString,
-                      mainType = Some("SA Payment on Account 2"),
+                      mainType = Some("ITSA - POA 2"),
                       items = Some(Seq(SubItem(Some(LocalDate.now.minusDays(2).toString))))
                     )
                   )

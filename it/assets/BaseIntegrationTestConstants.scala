@@ -60,4 +60,6 @@ object BaseIntegrationTestConstants {
   val testErrorNotFoundStatus: Int = Status.NOT_FOUND
   val testErrorMessage = "Dummy Error Message"
 
+  val testTaxCalculationId = "CALCID"
+  val testTimeStampString = "2017-07-06T12:34:56.789Z"
 }

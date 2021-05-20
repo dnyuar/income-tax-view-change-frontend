@@ -16,7 +16,7 @@
 
 package models
 
-import assets.CalcBreakdownTestConstants
+import assets.CalcBreakdownTestConstants._
 import enums.Estimate
 import models.calculation.{CalcDisplayModel, Calculation, Dividends, GainsOnLifePolicies, LumpSums, PayPensionsProfit, SavingsAndGains, TaxBand}
 import org.scalatest.Matchers
@@ -31,7 +31,7 @@ class CalcDisplayModelSpec extends TestSupport with Matchers {
     "display the income tax total" when {
 
       "calculation data exists" in {
-        CalcDisplayModel("", 149.86, CalcBreakdownTestConstants.justBusinessCalcDataModel, Estimate).whatYouOwe shouldBe "&pound;149.86"
+        CalcDisplayModel("", 149.86, justBusinessCalcDataModel, Estimate).whatYouOwe shouldBe "&pound;149.86"
       }
     }
 
@@ -46,7 +46,7 @@ class CalcDisplayModelSpec extends TestSupport with Matchers {
   "getModifiedBaseTaxBand" should {
 
     "return the pay/pensions base band when present" in {
-      CalcDisplayModel("", 0.0, CalcBreakdownTestConstants.justBusinessCalcDataModel, Estimate).getModifiedBaseTaxBand shouldBe Some(
+      CalcDisplayModel("", 0.0, justBusinessCalcDataModel, Estimate).getModifiedBaseTaxBand shouldBe Some(
         TaxBand(
           name = "BRT",
           rate = 20.0,
@@ -60,7 +60,7 @@ class CalcDisplayModelSpec extends TestSupport with Matchers {
 
     "return the savings base band when present without pay/pensions" in {
       CalcDisplayModel("", 0.0,
-        CalcBreakdownTestConstants.justBusinessCalcDataModel.copy(payPensionsProfit = PayPensionsProfit()),
+        justBusinessCalcDataModel.copy(payPensionsProfit = PayPensionsProfit()),
         Estimate).getModifiedBaseTaxBand shouldBe Some(
         TaxBand(
           name = "BRT",
@@ -75,7 +75,7 @@ class CalcDisplayModelSpec extends TestSupport with Matchers {
 
     "return the dividends base band when present without pay/pensions or savings" in {
       CalcDisplayModel("", 0.0,
-        CalcBreakdownTestConstants.justBusinessCalcDataModel.copy(
+        justBusinessCalcDataModel.copy(
           payPensionsProfit = PayPensionsProfit(),
           savingsAndGains = SavingsAndGains()
         ), Estimate).getModifiedBaseTaxBand shouldBe Some(
@@ -91,7 +91,7 @@ class CalcDisplayModelSpec extends TestSupport with Matchers {
 
     "return the lump sums base band when present without pay/pensions, savings or dividends" in {
       CalcDisplayModel("", 0.0,
-        CalcBreakdownTestConstants.testCalcModelCrystallised.copy(
+        testCalcModelCrystallised.copy(
           payPensionsProfit = PayPensionsProfit(),
           savingsAndGains = SavingsAndGains(),
           dividends = Dividends()
@@ -108,7 +108,7 @@ class CalcDisplayModelSpec extends TestSupport with Matchers {
 
     "return the gains on life policies base band when present without pay/pensions, savings, dividends or lump sums" in {
       CalcDisplayModel("", 0.0,
-        CalcBreakdownTestConstants.testCalcModelCrystallised.copy(
+        testCalcModelCrystallised.copy(
           payPensionsProfit = PayPensionsProfit(),
           savingsAndGains = SavingsAndGains(),
           dividends = Dividends(),
@@ -126,7 +126,7 @@ class CalcDisplayModelSpec extends TestSupport with Matchers {
 
     "return None when no base rate tax bands can be found" in {
       CalcDisplayModel("", 0.0,
-        CalcBreakdownTestConstants.testCalcModelCrystallised.copy(
+        testCalcModelCrystallised.copy(
           payPensionsProfit = PayPensionsProfit(),
           savingsAndGains = SavingsAndGains(),
           dividends = Dividends(),
