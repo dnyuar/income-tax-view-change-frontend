@@ -1,0 +1,71 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardFooter
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardHeader
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
+@import views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hmrcfrontend.views.html.components._
+
+
+@this(layout: Layout,
+heading: Heading,
+govukSummaryList: GovukSummaryList,
+h1: Heading1)
+
+@()(implicit request: Request[_], messages: Messages, appConfig: config.FrontendAppConfig)
+
+
+@mainHTML = {
+<a href="#" class="govuk-back-link">Back</a>
+
+@h1(content = Text(messages("home.tax-years.heading")))
+
+
+
+<dl class="govuk-summary-list">
+ <div class="govuk-summary-list__row">
+  <dd class="govuk-summary-list__value">
+   @messages("taxYears.taxYears", "2019", "2020")
+  </dd>
+  <dd class="govuk-summary-list__actions">
+   <a class="govuk-link"
+      id="updateReturn-link" href="@appConfig.submissionFrontendUrl">
+    @messages("taxYears.updateReturn")
+   </a>
+  </dd>
+  <dd class="govuk-summary-list__actions">
+   <a class="govuk-link"
+      id="viewReturn-link"
+      href="@{controllers.routes.HomeController.home().url}">
+    @messages("taxYears.viewReturn")
+   </a>
+  </dd>
+ </div>
+
+</dl>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+}
+
+@layout(pageTitle = messages("service.name"))(mainHTML)
+
+

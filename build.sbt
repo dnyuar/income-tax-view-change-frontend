@@ -15,7 +15,7 @@ val bootstrapPlayVersion      = "1.7.0"
 val govTemplateVersion        = "5.61.0-play-26"
 val playPartialsVersion       = "6.10.0-play-26"
 val authClientVersion         = "3.2.0-play-26"
-val playUiVersion             = "8.15.0-play-26"
+val playUiVersion             = "9.4.0-play-26"
 val playLanguageVersion       = "4.10.0-play-26"
 val catsVersion               = "0.9.0"
 
@@ -40,7 +40,8 @@ val compile = Seq(
   "uk.gov.hmrc" %% "logback-json-logger" % "4.8.0",
   "com.typesafe.play" %% "play-json-joda" % "2.6.10",
   "uk.gov.hmrc" %% "mongo-lock" % "6.23.0-play-26",
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.30.0-play-26"
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.30.0-play-26",
+"uk.gov.hmrc" %% "play-frontend-hmrc" % "0.67.0-play-26"
 )
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
@@ -74,8 +75,19 @@ lazy val scoverageSettings = {
   )
 }
 
+lazy val twirlImports: Seq[String] = Seq(
+  "play.twirl.api.HtmlFormat",
+  "play.twirl.api.HtmlFormat._",
+  "uk.gov.hmrc.govukfrontend.views.html.components._",
+  "uk.gov.hmrc.govukfrontend.views.html.helpers._",
+  "uk.gov.hmrc.hmrcfrontend.views.html.components._",
+  "uk.gov.hmrc.hmrcfrontend.views.html.helpers._"
+)
+
+
+
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtSassify)
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(playSettings : _*)
   .settings(scalaSettings: _*)

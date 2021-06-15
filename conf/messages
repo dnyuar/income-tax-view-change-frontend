@@ -10,6 +10,9 @@ base.continue                                                   = Continue
 base.error_summary.heading                                      = There is a problem
 base.error-prefix                                               = Error:
 
+service.name = Business tax account
+common.govUk = GOV.UK
+
 # Agent Base
 agent.base.service_name                                         = Your client’s Income Tax details
 agent.title_pattern.service_name.govuk                          = {0} - Your client’s Income Tax details - GOV.UK

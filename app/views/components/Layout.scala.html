@@ -1,0 +1,72 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers._
+@import uk.gov.hmrc.hmrcfrontend.views.config.StandardBetaBanner
+@import uk.gov.hmrc.hmrcfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+
+@this(
+govukLayout: GovukLayout,
+hmrcHeader: HmrcStandardHeader,
+head: HmrcHead,
+hmrcStandardFooter: HmrcStandardFooter,
+hmrcTimeoutDialog: HmrcTimeoutDialog,
+scripts: HmrcScripts,
+
+hmrcLanguageSelectHelper:HmrcLanguageSelectHelper
+)
+
+@(pageTitle: String,
+headBlock: Option[Html] = None,
+scriptsBlock: Option[Html] = None,
+showSignOut: Boolean = true,
+timeout: Boolean = true
+)(contentBlock: Html)(implicit request: Request[_], messages: Messages, appConfig: config.FrontendAppConfig)
+
+
+@headerBlock = {
+@hmrcHeader(
+serviceName = Some(messages("service.name")),
+serviceUrl =  Some(controllers.routes.HomeController.home().url),
+signOutUrl = Some(controllers.routes.HomeController.home().url)
+)
+}
+
+@content = {
+@contentBlock
+
+<div>
+</div>
+}
+
+@footerBlock = {
+
+<script src='@routes.Assets.versioned("lib/govuk-frontend/govuk/all.js")'></script>
+<script src='@routes.Assets.versioned("lib/hmrc-frontend/hmrc/all.js")'></script>
+<script src='@routes.Assets.versioned("javascripts/application.js")'></script>
+@scriptsBlock.map(x => x)
+}
+
+
+@govukLayout(
+pageTitle = Some(pageTitle + " - " + messages("service.name") + " - " + messages("common.govUk")),
+headBlock = Some(head()),
+headerBlock = Some(hmrcHeader(displayHmrcBanner = true)),
+beforeContentBlock = Some(hmrcLanguageSelectHelper()),
+scriptsBlock = Some(scripts()),
+footerBlock = Some(hmrcStandardFooter())
+)(content)

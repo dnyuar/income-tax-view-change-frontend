@@ -1,0 +1,29 @@
+
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+
+@this(govukSummaryList : GovukSummaryList)
+
+@()
+
+
+<dl class="govuk-summary-list">
+    <div class="govuk-summary-list__row">
+        <dd class="govuk-summary-list__value">
+            @messages("taxYears.taxYears", "2019", "2020")
+        </dd>
+        <dd class="govuk-summary-list__actions">
+            <a class="govuk-link"
+               id="updateReturn-link" href="@appConfig.submissionFrontendUrl">
+                @messages("taxYears.updateReturn")
+            </a>
+        </dd>
+        <dd class="govuk-summary-list__actions">
+            <a class="govuk-link"
+               id="viewReturn-link"
+               href="@{controllers.routes.HomeController.home().url}">
+                @messages("taxYears.viewReturn")
+            </a>
+        </dd>
+    </div>
+
+</dl>
