@@ -16,22 +16,24 @@
 
 package controllers
 
+import java.time.LocalDate
+
 import audit.AuditingService
 import audit.models.{WhatYouOweRequestAuditModel, WhatYouOweResponseAuditModel}
 import config.featureswitch.{FeatureSwitching, NewFinancialDetailsApi, TxmEventsApproved}
 import config.{FrontendAppConfig, ItvcErrorHandler, ItvcHeaderCarrierForPartialsConverter}
 import controllers.predicates.{AuthenticationPredicate, IncomeSourceDetailsPredicate, NinoPredicate, SessionTimeoutPredicate}
 import forms.utils.SessionKeys
-import implicits.ImplicitDateFormatterImpl
-import models.financialDetails.{FinancialDetailsErrorModel, FinancialDetailsResponseModel}
+import implicits.{ImplicitDateFormatter, ImplicitDateFormatterImpl}
+import models.financialDetails._
 import models.financialTransactions.{FinancialTransactionsErrorModel, FinancialTransactionsModel, FinancialTransactionsResponseModel}
 import play.api.Logger
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import services.{FinancialTransactionsService, PaymentDueService}
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
-
 import javax.inject.Inject
+
 import scala.concurrent.ExecutionContext
 
 class PaymentDueController @Inject()(val checkSessionTimeout: SessionTimeoutPredicate,
@@ -49,6 +51,12 @@ class PaymentDueController @Inject()(val checkSessionTimeout: SessionTimeoutPred
                                      dateFormatter: ImplicitDateFormatterImpl
                                     ) extends FrontendController(mcc) with I18nSupport with FeatureSwitching {
 
+  private def view(chargesList: WhatYouOweChargesList,  currentTaxYear: Int, implicitDateFormatter: ImplicitDateFormatter, backUrl: String, utr: Option[String],
+                   latePaymentInterestCharge: Boolean)(implicit request: Request[_]) = {
+    views.html.whatYouOwe(chargesList, currentTaxYear, implicitDateFormatter, backUrl, utr, latePaymentInterestCharge)
+  }
+
+
   def hasFinancialTransactionsError(transactionModels: List[FinancialTransactionsResponseModel]): Boolean = {
     transactionModels.exists(_.isInstanceOf[FinancialTransactionsErrorModel])
   }
@@ -58,9 +66,10 @@ class PaymentDueController @Inject()(val checkSessionTimeout: SessionTimeoutPred
   }
 
 
-  val viewPaymentsDue: Action[AnyContent] = (checkSessionTimeout andThen authenticate andThen retrieveNino andThen retrieveIncomeSources).async {
+  def viewPaymentsDue(isLatePaymentCharge: Boolean = false): Action[AnyContent] =
+    (checkSessionTimeout andThen authenticate andThen retrieveNino andThen retrieveIncomeSources).async {
     implicit user =>
-      if (isEnabled(NewFinancialDetailsApi)) {
+      if (isEnabled(NewFinancialDetailsApi) && !isLatePaymentCharge) {
         if (isEnabled(TxmEventsApproved)) {
           auditingService.extendedAudit(WhatYouOweRequestAuditModel(user))
         }
@@ -71,8 +80,8 @@ class PaymentDueController @Inject()(val checkSessionTimeout: SessionTimeoutPred
               auditingService.extendedAudit(WhatYouOweResponseAuditModel(user, whatYouOweChargesList))
             }
 
-            Ok(views.html.whatYouOwe(chargesList = whatYouOweChargesList, currentTaxYear = user.incomeSources.getCurrentTaxEndYear,
-               implicitDateFormatter = dateFormatter, backUrl = backUrl, user.saUtr)
+            Ok(view(chargesList = whatYouOweChargesList,currentTaxYear = user.incomeSources.getCurrentTaxEndYear,
+               implicitDateFormatter = dateFormatter, backUrl = backUrl, user.saUtr, latePaymentInterestCharge = isLatePaymentCharge)
             ).addingToSession(SessionKeys.chargeSummaryBackPage -> "paymentDue")
         } recover {
           case ex: Exception =>

@@ -63,10 +63,20 @@ case class DocumentDetail(taxYear: String,
 			"unknownCharge"
 	}
 
+	def getLatePaymentChargeTypeKey: String = documentDescription match {
+		case Some("ITSA- POA 1") => "latePaymentOnAccount1.text"
+		case Some("ITSA - POA 2") => "latePaymentOnAccount2.text"
+		case Some("TRM New Charge") | Some("TRM Amend Charge") => "lateBalancingCharge.text"
+		case error =>
+			Logger.error(s"[DocumentDetail][getLatePaymentChargeTypeKey] Missing or non-matching charge type: $error found")
+			"unknownCharge"
+	}
+
 }
 
 case class DocumentDetailWithDueDate(documentDetail: DocumentDetail, dueDate: Option[LocalDate]) {
 	val isOverdue: Boolean = dueDate.exists(_ isBefore LocalDate.now)
+
 }
 
 object DocumentDetail {

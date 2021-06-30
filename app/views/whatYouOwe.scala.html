@@ -21,8 +21,9 @@
 @import java.time.LocalDate
 @import views.html.helpers.backLinkHelper
 @import models.financialDetails.DocumentDetailWithDueDate
+@import models.financialDetails.DocumentDetail
 
-@(chargesList: WhatYouOweChargesList, currentTaxYear: Int, implicitDateFormatter: ImplicitDateFormatter,backUrl: String, utr: Option[String])(implicit request: Request[_], messages: Messages, appConfig: config.FrontendAppConfig)
+@(chargesList: WhatYouOweChargesList, currentTaxYear: Int, implicitDateFormatter: ImplicitDateFormatter,backUrl: String, utr: Option[String], latePaymentInterestCharge: Boolean)(implicit request: Request[_], messages: Messages, appConfig: config.FrontendAppConfig)
 @import implicitDateFormatter.longDate
 
 @saNoteParagraph = {
@@ -92,6 +93,24 @@
     </tr>
 }
 
+
+@tableRow2(rowId2: String, documentDetailWithDueDate: DocumentDetailWithDueDate , isOverduePayment: Boolean = false, isChargeTypeHyperlinked: Boolean = true) = {
+<tr class="govuk-table__row" id="@rowId2">
+    <td>@documentDetailWithDueDate.documentDetail.interestEndDate.get.toLongDateShort</td>
+
+    <td>
+        @if(isOverduePayment){<span id="@rowId2-overdue2" class="govuk-tag govuk-tag--red">@messages("whatYouOwe.over-due") </span>}
+        <br>
+        @if(isChargeTypeHyperlinked){<a id="@rowId2-link2" href="@controllers.routes.ChargeSummaryController.showChargeSummary(documentDetailWithDueDate.documentDetail.taxYear.toInt, documentDetailWithDueDate.documentDetail.transactionId, latePaymentInterestCharge: Boolean)">}
+        @messages(s"whatYouOwe.${documentDetailWithDueDate.documentDetail.getLatePaymentChargeTypeKey}")
+        @if(isChargeTypeHyperlinked){</a>}
+        <div>@messages("whatYouOwe.payment-type.taxYear", (documentDetailWithDueDate.documentDetail.taxYear.toInt - 1).toString, documentDetailWithDueDate.documentDetail.taxYear)</div>
+    </td>
+    <td class="numeric">@{documentDetailWithDueDate.documentDetail.remainingToPay.toCurrency}</td>
+</tr>
+
+}
+
 @main_template(
     title = messages("whatYouOwe.heading"),
     bodyClasses = None,
@@ -154,43 +173,62 @@
                     </table>
                 </div>
             }
-            @if(chargesList.overduePaymentList.nonEmpty){
-                <h2 id="over-due-payments-heading" class="heading-large">@messages("whatYouOwe.over-due-payments")</h2>
-                <div id="over-due-payments-table">
-                    <table class="govuk-table-whatYouOwe">
-                        @tableHead("over-due-payments-table-head")
-                        <tbody>
-                            @for((charge, index) <- chargesList.overduePaymentList.zipWithIndex) {
-                                @tableRow(s"over-due-type-$index", charge, isOverduePayment = true)
-                                @if(charge.documentDetail.interestOutstandingAmount.isDefined && charge.documentDetail.latePaymentInterestAmount.getOrElse[BigDecimal](0) <= 0) {
-                                    <tr id=@(s"overdue-charge-interest-$index")>
-                                        <td></td>
-                                        <td>
-                                            @messages("whatYouOwe.over-due.interest.line1")
-                                            <div>
-                                                @messages(s"whatYouOwe.over-due.interest.line2",
-                                                charge.documentDetail.interestFromDate.get.toLongDateShort,
-                                                charge.documentDetail.interestEndDate.get.toLongDateShort,
-                                                charge.documentDetail.interestRate.get
-                                                )
-                                            </div>
-                                        </td>
-                                        <td class="numeric">@{charge.documentDetail.interestOutstandingAmount.get.toCurrency}</td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
-                @if(chargesList.interestOnOverdueCharges) {
-                    <p id="interest-rate-para" class="interest-rate">
-                        @Html(messages("whatYouOwe.over-due.interest-rate",
-                        <a id="interest-rate-link" href="https://www.gov.uk/government/publications/rates-and-allowances-hmrc-interest-rates-for-late-and-early-payments/rates-and-allowances-hmrc-interest-rates" target="_blank">
-                            {messages("whatYouOwe.over-due.interest-rate.link")}</a>
-                        ))
-                    </p>
-                }
+            @if(chargesList.overduePaymentList.nonEmpty && latePaymentInterestCharge == true) {
+            <h2 id="over-due-payments-heading" class="heading-large">@messages("whatYouOwe.over-due-payments")</h2>
+            <div id="over-due-payments-table">
+                <table class="govuk-table-whatYouOwe">
+                    @tableHead("over-due-payments-table-head")
+                    <tbody>
+                    @for((charge, index) <- chargesList.overduePaymentList.zipWithIndex) {
+                    @tableRow(s"over-due-type-$index", charge, isOverduePayment = true)
+                    @if(charge.documentDetail.interestOutstandingAmount.isDefined && charge.documentDetail.latePaymentInterestAmount.getOrElse[BigDecimal](0) <= 0) {
+                    <tr id=@(s"overdue-charge-interest-$index")>
+                        <td></td>
+                        <td>
+                            @messages("whatYouOwe.over-due.interest.line1")
+                            <div>
+                                @messages(s"whatYouOwe.over-due.interest.line2",
+                                charge.documentDetail.interestFromDate.get.toLongDateShort,
+                                charge.documentDetail.interestEndDate.get.toLongDateShort,
+                                charge.documentDetail.interestRate.get
+                                )
+                            </div>
+                        </td>
+                        <td class="numeric">@{charge.documentDetail.interestOutstandingAmount.get.toCurrency}</td>
+                    </tr>
+                    }
+                    }
+                    </tbody>
+                </table>
+            </div>
+            @if(chargesList.interestOnOverdueCharges) {
+            <p id="interest-rate-para" class="interest-rate">
+                @Html(messages("whatYouOwe.over-due.interest-rate",
+                <a id="interest-rate-link" href="https://www.gov.uk/government/publications/rates-and-allowances-hmrc-interest-rates-for-late-and-early-payments/rates-and-allowances-hmrc-interest-rates" target="_blank">
+                    {messages("whatYouOwe.over-due.interest-rate.link")}</a>
+                ))
+            </p>
             }
+            } else {
+            <h2 id="over-due-payments-heading-late" class="heading-large">@messages("whatYouOwe.over-due-payments")</h2>
+            <div id="over-due-payments-table-late">
+                <table class="govuk-table-whatYouOwe">
+                    @tableHead("over-due-payments-table-head")
+                    <tbody>
+                    @for((charge, index) <- chargesList.overduePaymentList.zipWithIndex) {
+                    @tableRow2(s"over-due-type-$index", charge, isOverduePayment = true)
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                @if(!chargesList.bcdChargeTypeDefinedAndGreaterThanZero) {@paymentTypesDropdown}
+            </p>
+
+}
+
+
+
             @if(chargesList.dueInThirtyDaysList.nonEmpty){
                 <h3 id="due-in-thirty-days-payments-heading" class="heading-large">@messages("whatYouOwe.due-in-thirty-days-payments")</h3>
                 <div id="due-in-thirty-days-payments-table">
