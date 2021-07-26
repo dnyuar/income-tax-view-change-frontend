@@ -28,12 +28,14 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
 import services.ReportDeadlinesService
 import uk.gov.hmrc.http.HeaderCarrier
+import views.html.NoReportDeadlines
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportDeadlinesController @Inject()(val checkSessionTimeout: SessionTimeoutPredicate,
+class ReportDeadlinesController @Inject()(val noReportDeadlines: NoReportDeadlines,
+                                          val checkSessionTimeout: SessionTimeoutPredicate,
                                           val authenticate: AuthenticationPredicate,
                                           val retrieveNino: NinoPredicate,
                                           val retrieveIncomeSources: IncomeSourceDetailsPredicate,
@@ -53,7 +55,7 @@ class ReportDeadlinesController @Inject()(val checkSessionTimeout: SessionTimeou
           ifEnabled = renderViewNextUpdates,
           ifDisabled = renderViewBothObligations)
       } else {
-        Future.successful(Ok(views.html.noReportDeadlines(backUrl = backUrl)))
+        Future.successful(Ok(noReportDeadlines(backUrl = backUrl)))
       }
   }
 

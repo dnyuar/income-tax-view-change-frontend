@@ -34,6 +34,7 @@ import play.api.http.Status
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.Helpers._
 import services.ReportDeadlinesService
+import views.html.NoReportDeadlines
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -42,6 +43,7 @@ class ReportDeadlinesControllerSpec extends MockAuthenticationPredicate with Moc
                                             with MockReportDeadlinesService with FeatureSwitching{
 
   object TestReportDeadlinesController extends ReportDeadlinesController(
+    app.injector.instanceOf[NoReportDeadlines],
     app.injector.instanceOf[SessionTimeoutPredicate],
     MockAuthenticationPredicate,
     app.injector.instanceOf[NinoPredicate],
