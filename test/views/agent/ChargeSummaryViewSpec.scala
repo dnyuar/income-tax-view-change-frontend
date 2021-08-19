@@ -19,7 +19,7 @@ package views.agent
 import assets.FinancialDetailsTestConstants._
 import config.featureswitch.FeatureSwitching
 import models.chargeHistory.ChargeHistoryModel
-import models.financialDetails.{DocumentDetailWithDueDate, Payment, PaymentsWithChargeType}
+import models.financialDetails.{DocumentDetail, DocumentDetailWithDueDate, FinancialDetail, FinancialDetailsModel, Payment, PaymentsWithChargeType, SubItem}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.jsoup.select.Elements
@@ -35,7 +35,8 @@ class ChargeSummaryViewSpec extends TestSupport with FeatureSwitching with ViewS
               chargeHistoryOpt: Option[List[ChargeHistoryModel]] = Some(List()),
               latePaymentInterestCharge: Boolean = false,
               paymentAllocations: List[PaymentsWithChargeType]= List(),
-              paymentAllocationEnabled: Boolean = false
+              paymentAllocationEnabled: Boolean = false,
+              payments: FinancialDetailsModel = payments
              ) {
 
     val chargeSummary: ChargeSummary = app.injector.instanceOf[ChargeSummary]
@@ -46,7 +47,8 @@ class ChargeSummaryViewSpec extends TestSupport with FeatureSwitching with ViewS
       latePaymentInterestCharge = latePaymentInterestCharge,
       backUrl = "testBackURL",
       paymentAllocations,
-      paymentAllocationEnabled
+      paymentAllocationEnabled,
+      payments
     )
 
     val document: Document = Jsoup.parse(chargeSummaryView.toString())
@@ -76,6 +78,11 @@ class ChargeSummaryViewSpec extends TestSupport with FeatureSwitching with ViewS
     val chargeHistoryHeading = "Payment history"
     val historyRowPOA1Created = "29 Mar 2018 Payment on account 1 of 2 created £1,400.00"
   }
+
+  val payments: FinancialDetailsModel = FinancialDetailsModel(
+    documentDetails = List(DocumentDetail("9999", "PAYID01", Some("Payment on Account"), Some(-5000), Some(-15000), LocalDate.of(2018, 8, 6), None, None, None, None, None, Some("lotItem"), Some("lot"))),
+    financialDetails = List(FinancialDetail("9999", transactionId = Some("PAYIDO1"), items = Some(Seq(SubItem(dueDate = Some("2017-08-07"), paymentLot = Some("lot"), paymentLotItem = Some("lotItem"))))))
+  )
 
   "The agent charge summary view" should {
 
@@ -290,6 +297,39 @@ class ChargeSummaryViewSpec extends TestSupport with FeatureSwitching with ViewS
         }
       }
 
+    }
+
+
+    "show payment allocations in history table with links" when {
+      val typePOA1 = "SA Payment on Account 1"
+      val typePOA2 = "SA Payment on Account 2"
+      val typeBalCharge = "SA Balancing Charge"
+
+      def paymentsForCharge(mainType: String, chargeType: String, date: String, amount: BigDecimal): PaymentsWithChargeType =
+        PaymentsWithChargeType(
+          payments = List(Payment(reference = Some("reference"), amount = Some(amount), method = Some("method"),
+            lot = Some("lot"), lotItem = Some("lotItem"), date = Some(date), transactionId = None)),
+          mainType = Some(mainType), chargeType = Some(chargeType))
+
+      val paymentAllocations = List(
+        paymentsForCharge(typePOA1, "ITSA NI", "2018-03-30", 1500.0),
+        paymentsForCharge(typePOA1, "NIC4 Scotland", "2018-03-31", 1600.0),
+
+        paymentsForCharge(typePOA2, "ITSA Wales", "2018-04-01", 2400.0),
+        paymentsForCharge(typePOA2, "NIC4-GB", "2018-04-15", 2500.0),
+
+        paymentsForCharge(typeBalCharge, "ITSA England & NI", "2019-12-10", 3400.0),
+        paymentsForCharge(typeBalCharge, "NIC4-NI", "2019-12-11", 3500.0),
+        paymentsForCharge(typeBalCharge, "NIC2 Wales", "2019-12-12", 3600.0),
+        paymentsForCharge(typeBalCharge, "CGT", "2019-12-13", 3700.0),
+        paymentsForCharge(typeBalCharge, "SL", "2019-12-14", 3800.0),
+        paymentsForCharge(typeBalCharge, "Voluntary NIC2-GB", "2019-12-15", 3900.0),
+      )
+
+      "chargeHistory enabled with a matching link to the payment allocations page" in new Setup(documentDetailWithDueDateModel(),
+        paymentAllocationEnabled = true, paymentAllocations = paymentAllocations) {
+        document.select(Selectors.table).select("a").forall(_.attr("href") == controllers.agent.routes.PaymentAllocationsController.viewPaymentAllocation("PAYID01").url) shouldBe true
+      }
     }
 
     "display Late payment interest on accounts" when {

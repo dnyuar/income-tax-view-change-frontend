@@ -75,15 +75,16 @@ abstract class BaseFrontendController(implicit val mcc: MessagesControllerCompon
           case _ => EmptyPredicate
         }
 
-        authorisedFunctions.authorised(authPredicate).retrieve(allEnrolments and affinityGroup and confidenceLevel and credentials) {
+				authorisedFunctions.authorised(authPredicate).retrieve(allEnrolments and affinityGroup and confidenceLevel and credentials) {
           case enrolments ~ affinity ~ confidence ~ credentials =>
             implicit val user: User = userApply(enrolments, affinity, confidence, credentials)
-            predicate.apply(request)(user) match {
+						predicate.apply(request)(user) match {
               case Right(AuthPredicateSuccess) if requireClientSelected && clientMtd.isEmpty =>
                 Future.successful(Redirect(controllers.agent.routes.EnterClientsUTRController.show()))
               case Right(AuthPredicateSuccess) =>
-                action(request)(user)
-              case Left(failureResult) => failureResult
+								action(request)(user)
+              case Left(failureResult) =>
+								failureResult
             }
         }.recover(handleExceptions(request))
       }

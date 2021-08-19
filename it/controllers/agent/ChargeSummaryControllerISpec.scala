@@ -19,7 +19,7 @@ package controllers.agent
 import java.time.LocalDate
 
 import assets.BaseIntegrationTestConstants._
-import assets.IncomeSourceIntegrationTestConstants.{multipleBusinessesAndPropertyResponse, propertyOnlyResponse, testValidFinancialDetailsModelJson}
+import assets.IncomeSourceIntegrationTestConstants._
 import audit.models.ChargeSummaryAudit
 import auth.MtdItUser
 import config.featureswitch.{ChargeHistory, FeatureSwitching, PaymentAllocation, TxmEventsApproved}
@@ -60,10 +60,10 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
 
       IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, propertyOnlyResponse)
 
-      stubGetFinancialDetailsSuccess()
+      IncomeTaxViewChangeStub.stubGetFinancialDetailsByDateRange(testNino)(OK, testValidFinancialDetailsModelJson(10.34, 1.2))
 
       val result = IncomeTaxViewChangeFrontend.getChargeSummary(
-        currentTaxYearEnd.getYear.toString, "testId", clientDetails
+        "2018", "1040000123", clientDetails
       )
 
       AuditStub.verifyAuditEvent(ChargeSummaryAudit(
@@ -71,13 +71,13 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
           testMtditid, testNino, None,
           multipleBusinessesAndPropertyResponse, Some("1234567890"), None, Some("Agent"), Some(testArn)
         )(FakeRequest()),
-        docDateDetail(LocalDate.now().toString, "ITSA- POA 1"),
+        docDateDetail("2018-02-14", "TRM New Charge"),
         agentReferenceNumber = Some("1")
       ))
 
       result should have(
         httpStatus(OK),
-        pageTitle("Payment on account 1 of 2 - Your client’s Income Tax details - GOV.UK")
+        pageTitle("Remaining balance - Your client’s Income Tax details - GOV.UK"),
       )
     }
 
@@ -86,12 +86,14 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
       disable(TxmEventsApproved)
       stubAuthorisedAgentUser(authorised = true)
 
-      IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, propertyOnlyResponse)
+      IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, multipleBusinessesAndPropertyResponse)
 
-      stubGetFinancialDetailsSuccess()
+      IncomeTaxViewChangeStub.stubGetFinancialDetailsByDateRange(testNino)(OK, testValidFinancialDetailsModelJson(10.34, 1.2))
 
-      val result = IncomeTaxViewChangeFrontend.getChargeSummary(
-        currentTaxYearEnd.getYear.toString, "testId", clientDetails
+      IncomeTaxViewChangeStub.stubChargeHistoryResponse(testMtditid, "1040000123")(OK, testChargeHistoryJson(testMtditid, "1040000123", 2500))
+
+
+      val result = IncomeTaxViewChangeFrontend.getChargeSummary("2018", "1040000123", clientDetails
       )
 
       AuditStub.verifyAuditDoesNotContainsDetail(ChargeSummaryAudit(
@@ -103,9 +105,11 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
         agentReferenceNumber = Some("1")
       ).detail)
 
+      verifyIncomeSourceDetailsCall(testMtditid)
+
       result should have(
         httpStatus(OK),
-        pageTitle("Payment on account 1 of 2 - Your client’s Income Tax details - GOV.UK")
+        pageTitle("Remaining balance - Your client’s Income Tax details - GOV.UK")
       )
     }
 
@@ -114,18 +118,17 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
       enable(ChargeHistory)
       enable(PaymentAllocation)
       stubAuthorisedAgentUser(authorised = true)
-      IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, propertyOnlyResponse)
-      stubGetFinancialDetailsSuccess()
-      stubChargeHistorySuccess()
 
-      val result = IncomeTaxViewChangeFrontend.getChargeSummary(
-        currentTaxYearEnd.getYear.toString, "testId", clientDetails
+      IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, propertyOnlyResponse)
+      IncomeTaxViewChangeStub.stubGetFinancialDetailsByDateRange(testNino)(OK, testValidFinancialDetailsModelJson(10.34, 1.2))
+      IncomeTaxViewChangeStub.stubChargeHistoryResponse(testMtditid, "1040000123")(OK, testChargeHistoryJson(testMtditid, "1040000123", 2500))
+
+      val result = IncomeTaxViewChangeFrontend.getChargeSummary("2018", "1040000123", clientDetails
       )
 
       result should have(
         httpStatus(OK),
-        pageTitle("Payment on account 1 of 2 - Your client’s Income Tax details - GOV.UK"),
-        elementTextBySelector("main h2")("Payment history")
+        pageTitle("Remaining balance - Your client’s Income Tax details - GOV.UK")
       )
 
       AuditStub.verifyAuditEvent(ChargeSummaryAudit(
@@ -133,7 +136,7 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
           testMtditid, testNino, None,
           multipleBusinessesAndPropertyResponse, Some("1234567890"), None, Some("Agent"), Some(testArn)
         )(FakeRequest()),
-        docDateDetail(LocalDate.now().toString, "ITSA- POA 1"),
+        docDateDetail("2018-02-14", "TRM New Charge"),
         agentReferenceNumber = Some("1")
       ))
     }
@@ -144,15 +147,15 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
       enable(PaymentAllocation)
       stubAuthorisedAgentUser(authorised = true)
       IncomeTaxViewChangeStub.stubGetIncomeSourceDetailsResponse(testMtditid)(OK, propertyOnlyResponse)
-      stubGetFinancialDetailsSuccess()
+      IncomeTaxViewChangeStub.stubGetFinancialDetailsByDateRange(testNino)(OK, testValidFinancialDetailsModelJson(10.34, 1.2))
 
       val result = IncomeTaxViewChangeFrontend.getChargeSummaryLatePayment(
-        currentTaxYearEnd.getYear.toString, "testId", clientDetails
+        "2018", "1040000123", clientDetails
       )
 
       result should have(
         httpStatus(OK),
-        pageTitle("Late payment interest on payment on account 1 of 2 - Your client’s Income Tax details - GOV.UK"),
+        pageTitle("Late payment interest on remaining balance - Your client’s Income Tax details - GOV.UK"),
         elementTextBySelector("main h2")("Payment history")
       )
 
@@ -161,7 +164,7 @@ class ChargeSummaryControllerISpec extends ComponentSpecBase with FeatureSwitchi
           testMtditid, testNino, None,
           multipleBusinessesAndPropertyResponse, Some("1234567890"), None, Some("Agent"), Some(testArn)
         )(FakeRequest()),
-        docDateDetail(LocalDate.now().toString, "ITSA- POA 1"),
+        docDateDetail("2018-02-14", "TRM New Charge"),
         agentReferenceNumber = Some("1")
       ))
     }
